@@ -44,3 +44,12 @@ It all starts with the NodeRegistryLogic contract as it imports NodeRegistryData
   6. Develop a bare minimum UI to display the smart contract functionalities like nodeList, deposit of a node, etc
 
 ***
+
+### Client
+
+For client side development I have preferred to use Angular. All the client side development files are in the client directory.
+
+### Server
+
+For server side development I have preferred to use Node.js. All the server side development files are in the server directory.
+It also has the smart contracts, which were taken from Etherscan, the tests for the smart contracts, the APIs and interaction with the smart contracts using the INCUBED library.
