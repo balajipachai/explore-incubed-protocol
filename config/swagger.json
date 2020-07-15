@@ -1,0 +1,117 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Zongo: MVP",
+    "description": "Zongo enterprise enterprise portal API Documentation",
+    "license": {
+      "name": "Home",
+      "url": ""
+    }
+  },
+  "host": "localhost:3000",
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "Zongo AddTools",
+      "description": "API's to manage addition of tools in the system"
+    }
+  ],
+  "schemes": ["http", "https"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "paths": {
+    "/api/punch/add": {
+      "post": {
+        "summary": "Adds punch tool details into the system",
+        "tags": ["Zongo AddTools"],
+        "parameters": [
+          {
+            "name": "Add Punch Tool",
+            "in": "body",
+            "description": "Provide tool details",
+            "schema": {
+              "$ref": "#definitions/ADDTOOLS"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    }
+  },
+  "definitions": {
+    "RESPONSE": {
+      "properties": {
+        "status": {
+          "type": "string",
+          "example": "000"
+        },
+        "data": {
+          "type": "object"
+        },
+        "error": {
+          "type": "string",
+          "example": ""
+        },
+        "message": {
+          "type": "string",
+          "example": ""
+        }
+      }
+    },
+    "ADDTOOLS": {
+      "properties": {
+        "sbr": {
+          "type": "string",
+          "example": "5 mm/inch"
+        },
+        "measuringUnit": {
+          "type": "string",
+          "example": "mm/inch"
+        },
+        "station": {
+          "type": "string",
+          "example": "A/B/C/D/E/F/Special_Case"
+        },
+        "shape": {
+          "type": "string",
+          "example": "round/square/reactangle/triangle/hexagon/octagon"
+        },
+        "toolLengthType": {
+          "type": "string",
+          "example": "long/short/insert"
+        },
+        "features": {
+          "type": "array",
+          "example": ["shear_angle", "lubrication", "coating", "heavy_duty"]
+        },
+        "subFeatures": {
+          "type": "string",
+          "example": "flat/roof_top/2_way_concave/4_way_concave/whisper/1_way/cup"
+        },
+        "price": {
+          "type": "string",
+          "example": "100$"
+        },
+        "make": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        },
+        "dimension": {
+          "type": "string"
+        },
+        "avatar": {
+          "type": "file"
+        }
+      }
+    }
+  }
+}
