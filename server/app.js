@@ -23,7 +23,7 @@ app.use(morgan('combined', { stream: winston.stream }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, '/dist/incubed-frontend')));
+app.use(express.static(path.join(__dirname, 'client/dist/incubed-frontend')));
 app.use(
   '/api-docs',
   swaggerUi.serve,
@@ -105,6 +105,6 @@ app.use((err, req, res, next) => {
 
 // Send all requests to index.html
 app.get('/*', function (req, res) {
-  res.sendFile(path.join(__dirname + '/dist/incubed-frontend/index.html'));
+  res.sendFile(path.join(__dirname + '/client/dist/incubed-frontend/index.html'));
 });
 module.exports = app;
