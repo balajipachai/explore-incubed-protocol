@@ -5,7 +5,7 @@ const winston = require('winston');
 const options = {
   file: {
     level: 'info',
-    filename: `${appRoot}/logs/blockchains_assignment.log`,
+    filename: `${appRoot}/logs/exploring_incubed.log`,
     handleExceptions: true,
     format: winston.format.prettyPrint(),
     maxsize: 512000000, // 500 MB

@@ -23,7 +23,7 @@ app.use(morgan('combined', { stream: winston.stream }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '/dist/incubed-frontend')));
 app.use(
   '/api-docs',
   swaggerUi.serve,
@@ -34,7 +34,7 @@ app.use(
     customCssHideSwaggerHeader,
     null,
     null,
-    "API's Documentation - Blockchains Assignment",
+    "API's Documentation - Exploring INCUBED Protocol",
   ),
 );
 
@@ -103,4 +103,8 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Send all requests to index.html
+app.get('/*', function (req, res) {
+  res.sendFile(path.join(__dirname + '/dist/incubed-frontend/index.html'));
+});
 module.exports = app;
