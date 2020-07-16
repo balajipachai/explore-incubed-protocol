@@ -7,7 +7,7 @@ const NodeRegistryLogic = artifacts.require('NodeRegistryLogic');
 
 module.exports = function (deployer, network, accounts) {
   const [owner] = accounts;
-  const minDeposit = '0x2386f26fc10000';
+  const minDeposit = 1000;
   deployer.deploy(BlockhashRegistry, { from: owner })
     .then(() => deployer.deploy(NodeRegistryData, { from: owner }))
     .then(() => deployer.deploy(
