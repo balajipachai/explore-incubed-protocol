@@ -154,3 +154,6 @@ testem.log
 # System Files
 .DS_Store
 Thumbs.db
+
+# Ignore .in3 directory
+.in3
