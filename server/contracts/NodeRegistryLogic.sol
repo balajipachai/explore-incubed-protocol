@@ -472,6 +472,8 @@ contract NodeRegistryLogic {
 
         if (_additionalDeposit > 0) {
             IERC20 supportedToken = nodeRegistryData.supportedToken();
+            /// THERE IS NO NEED OF REQUIRE OVER HERE
+            /// AS IN TRANSFERFROM THERE IS ALREADY A CHECK WHICH DOES THAT
             require(
                 supportedToken.transferFrom(
                     msg.sender,
