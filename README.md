@@ -53,3 +53,36 @@ For client side development I have preferred to use Angular. All the client side
 
 For server side development I have preferred to use Node.js. All the server side development files are in the server directory.
 It also has the smart contracts, which were taken from Etherscan, the tests for the smart contracts, the APIs and interaction with the smart contracts using the INCUBED library.
+
+***
+
+### Contract Deployment Process
+
+1. Deployed BlockhashRegistry() as its constructor takes 0 arguments.
+2. Deployed NodeRegistryData() as its constructor takes 0 arguments.
+3. Deployed NodeRegistryLogic() with parameters:
+  - address(BlockhashRegistry)
+  - address(NodeRegistryData)
+  - minDeposit = 1e16
+
+  However, in `NodeRegistryData`, the `ownerContract` field should be equal to `NodeRegistryLogicContract` and `supportedToken` 
+  should be equal to the ERC20 token through which deposits will be made.
+
+  But, ownerContract is set during NodeRegistryData deployment, then how do we set it?
+    - by calling `adminSetLogic(address(NodeRegistryLogic))` from the same account that deployed NodeRegistryData
+    - and setting supportedToken field by calling `adminSetSupportedToken(tokenAddress)` from the same account that deployed NodeRegistryData
+
+In this way the contracts have been deployed, thanks to Martin Küchler for helping out via email.
+Now we are all set to test our deployed contracts.
+
+***
+
+### TESTS FOR THE CONTRACTS
+
+The tests for the contracts are developed using mocha and chai and openzeppelin-test-helpers.
+
+***
+
+### IMPROVEMENTS
+
+1. In my opinion in NodeRegistryLogic.sol line no: 477 it is an additional require statement which is not needed, I have added comments over ther too.
