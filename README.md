@@ -83,6 +83,14 @@ The tests for the contracts are developed using mocha and chai and openzeppelin-
 
 ***
 
+### NODEREGISTRYLOGIC CONTRACT DEPLOYED ADDRESSES ON KOVAN AND GOERLI NETWORK
+
+1. NODEREGISTRY_LOGIC_DEPLOYED_ADDRESS_GOERLI = `0xc4DB1aF5365F14d622AFb7e90a5B9c29C3Bf6D6E`
+2. NODEREGISTRY_LOGIC_DEPLOYED_ADDRESS_KOVAN = `0xc4DB1aF5365F14d622AFb7e90a5B9c29C3Bf6D6E`
+3. On KOVAN & GOERLI SET THE adminSetSupportedToken() & adminSetLogic() using Remix IDE and Injected Web3
+
+***
+
 ### IMPROVEMENTS
 
 1. In my opinion in NodeRegistryLogic.sol line no: 477 it is an additional require statement which is not needed, I have added comments over ther too.
