@@ -29,5 +29,23 @@ router.get('/noderegistrylogic/all/public/state/variables', async (req, res) => 
   }
 });
 
+router.post('/noderegistrylogic/register/node', async (req, res) => {
+  try {
+    const data = await gateway.nodeRegistryLogicRegisterNode(req.body);
+    res.json({
+      status: 'success',
+      message: 'Node registered successfully',
+      data,
+    });
+  } catch (e) {
+    logger.error('Error in registering a node', e);
+    res.json({
+      status: 'failure',
+      message: 'Registering a node failed',
+      data: [],
+    });
+  }
+});
+
 
 module.exports = router;

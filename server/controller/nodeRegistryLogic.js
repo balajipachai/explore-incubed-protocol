@@ -8,8 +8,9 @@ const utils = require('../utils/');
 async function getPublicVariables(params) {
   const { network } = params;
   utils.getIn3Provider(network); // This sets the web3 object
-  const contractInstance = utils.getContractInstance('NodeRegistryLogic', network);
-  console.log(contractInstance);
+  const contractInstance = utils.getContractInstance(
+    process.env.NODEREGISTRYLOGIC_CONTRACT_NAME, network,
+  );
   const publicVariables = await Promise.all([
     contractInstance.methods.blockRegistry().call(),
     contractInstance.methods.nodeRegistryData().call(),
@@ -43,6 +44,12 @@ async function getPublicVariables(params) {
   }];
 }
 
+async function registerNode(params) {
+  const {
+    url, props, weight, deposit,
+  } = params;
+}
 module.exports = {
   getPublicVariables,
+  registerNode,
 };

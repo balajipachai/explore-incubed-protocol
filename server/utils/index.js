@@ -1,9 +1,11 @@
 /* eslint-disable security/detect-object-injection */
 const in3wasm = require('in3-wasm');
 const Web3 = require('web3');
-const NodeRegistryLogicJSON = require('../build/contracts/NodeRegistryLogic.json');
-const BlockhashRegistryJSON = require('../build/contracts/BlockhashRegistry.json');
-const NodeRegistryDataJSON = require('../build/contracts/NodeRegistryData.json');
+const NodeRegistryLogicJSON = require('../build/contracts/NodeRegistryLogic');
+const BlockhashRegistryJSON = require('../build/contracts/BlockhashRegistry');
+const NodeRegistryDataJSON = require('../build/contracts/NodeRegistryData');
+const WETH9JSON = require('../build/contracts/WETH9');
+const logger = require('../config/winston');
 
 let web3;
 
@@ -23,6 +25,7 @@ function getIn3Provider(network) {
     key: process.env.IN3_SIGNING_KEY,
   });
   web3 = new Web3(in3.createWeb3Provider());
+  return web3;
 }
 
 /**
@@ -31,18 +34,73 @@ function getIn3Provider(network) {
  * @param {String} network The network name
  */
 function getContractInstance(contractName, network) {
-  const deployedOn = `NODEREGISTRY_LOGIC_DEPLOYED_ADDRESS_${network}`;
-  console.log('deployedOn & contractname', deployedOn, contractName);
+  let deployedOn = '';
+  console.log('Deployed: ', network, contractName);
   switch (contractName) {
-    case 'NodeRegistryLogic': return new web3.eth.Contract(NodeRegistryLogicJSON.abi, process.env[deployedOn]);
-    case 'BlockhashRegistry': return new web3.eth.Contract(BlockhashRegistryJSON.abi, process.env[deployedOn]);
-    case 'NodeRegistryData': return new web3.eth.Contract(NodeRegistryDataJSON.abi, process.env[deployedOn]);
+    case 'NodeRegistryLogic':
+      deployedOn = `NODEREGISTRY_LOGIC_DEPLOYED_ADDRESS_${network}`;
+      return new web3.eth.Contract(NodeRegistryLogicJSON.abi, process.env[deployedOn]);
+    case 'BlockhashRegistry':
+      deployedOn = `BLOCKHASHREGISTRY_LOGIC_DEPLOYED_ADDRESS_${network}`;
+      return new web3.eth.Contract(BlockhashRegistryJSON.abi, process.env[deployedOn]);
+    case 'NodeRegistryData':
+      deployedOn = `NODEREGISTRYDATA_LOGIC_DEPLOYED_ADDRESS_${network}`;
+      return new web3.eth.Contract(NodeRegistryDataJSON.abi, process.env[deployedOn]);
+    case 'WETH9':
+      deployedOn = `WETH9_DEPLOYED_ADDRESS_${network}`;
+      return new web3.eth.Contract(WETH9JSON.abi, process.env[deployedOn]);
     default:
       throw new Error('No case matched in getContractInstance');
   }
 }
 
+function getABIHelper(abi, functionName) {
+  return abi.filter((functionABI) => functionABI.name === functionName);
+}
+
+function getFunctionABI(contractName, functionName) {
+  switch (contractName) {
+    case 'NodeRegistryLogic': return getABIHelper(NodeRegistryLogicJSON.abi, functionName);
+    case 'BlockhashRegistry': return getABIHelper(BlockhashRegistryJSON.abi, functionName);
+    case 'NodeRegistryData': return getABIHelper(NodeRegistryDataJSON.abi, functionName);
+    case 'WETH9': return getABIHelper(WETH9JSON.abi, functionName);
+    default:
+      throw new Error('No case matched in getFunctionABI');
+  }
+}
+
+async function sendContractTransaction(params) {
+  const {
+    to, method, args, privateKey,
+  } = params;
+  console.log('key is: ', privateKey);
+  const receipt = await web3.eth.sendTransaction({
+    to,
+    method,
+    args,
+    confirmations: 2,
+    pk: privateKey,
+  });
+  return receipt;
+}
+
+function getMethod(meethodName, inputs) {
+  let method = `${meethodName}(`;
+  inputs.forEach((input, index) => {
+    if (index !== inputs.length - 1) {
+      method += `${input.type},`;
+    } else {
+      method += `${input.type})`;
+    }
+  });
+  console.log('Method in getMethod: ', method);
+  return method;
+}
+
 module.exports = {
   getIn3Provider,
   getContractInstance,
+  getFunctionABI,
+  sendContractTransaction,
+  getMethod,
 };
