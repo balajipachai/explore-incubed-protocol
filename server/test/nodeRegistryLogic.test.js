@@ -5,11 +5,8 @@
 /* eslint-disable prefer-arrow-callback */
 
 const {
-  balance,
   constants,
-  ether,
   expectEvent,
-  send,
   expectRevert,
   time,
 } = require('@openzeppelin/test-helpers');
@@ -186,8 +183,20 @@ contract('NodeRegistryLogic', function (accounts) {
     });
 
     context('BlockhashRegistry Contract', function () {
-      it('Nothing to check', async function () {
-        assert.ok('Nothing to test for constructor invocation');
+      let blockHashMapping;
+      let blockNumber;
+      context('searchForAvailableBlock', function () {
+        it('should get the closest snapshot', async function () {
+          const latestBlock = await time.latestBlock();
+          blockNumber = await blockhashRegistryContractInstance.searchForAvailableBlock
+            .call(0, latestBlock);
+          assert.notEqual(blockNumber, 0, 'BlockNumber do not match');
+        });
+        it('should check blockHashMapping is non-zero bytes32', async function () {
+          blockHashMapping = await blockhashRegistryContractInstance.blockhashMapping
+            .call(blockNumber);
+          assert.notEqual(blockHashMapping, constants.ZERO_BYTES32, 'Block hash mapping do not match');
+        });
       });
     });
   });
@@ -238,6 +247,10 @@ contract('NodeRegistryLogic', function (accounts) {
 
     context('success', function () {
       context('FOR FIRST NODE', function () {
+        it('should check the supportedToken to be WETH9', async function () {
+          const erc20Token = await nodeRegistryLogicContractInstance.supportedToken.call();
+          assert.equal(erc20Token, supportedTokenContractInstance.address, 'Token address do not match');
+        });
         it('Deposit minimum deposit into WETH9 contract from signer1', async function () {
           block = await supportedTokenContractInstance.deposit({
             from: FIRST_NODE_SIGNER,
@@ -478,6 +491,38 @@ contract('NodeRegistryLogic', function (accounts) {
               props: FOURTH_NODE_PROPS.toString(),
               signer: FOURTH_NODE_SIGNER,
               deposit: '1000',
+            },
+          );
+        });
+        it('should check the totalNodes to be 4', async function () {
+          const total = await nodeRegistryLogicContractInstance.totalNodes.call();
+          assert.equal(total.toNumber(), 4, 'Total nodes do not match');
+        });
+      });
+
+      context('WETH9 functions', function () {
+        it('should check totalSupply to be > 0', async function () {
+          const supply = await supportedTokenContractInstance.totalSupply.call();
+          assert.notEqual(supply.toNumber(), 0, 'Total supply do not match');
+        });
+        it('should revert when trying to withdraw more than the deposited amount', async function () {
+          await expectRevert(
+            supportedTokenContractInstance.withdraw(2500, { from: FIRST_NODE_SIGNER }),
+            'Insufficient balance in withdraw',
+          );
+        });
+        it('should be able to deposit and withdraw tokens', async function () {
+          await supportedTokenContractInstance.deposit({ from: FIRST_NODE_SIGNER, value: 30 });
+          block = await supportedTokenContractInstance.withdraw(29, { from: FIRST_NODE_SIGNER });
+          assert.equal(block.receipt.status, true, 'Transaction failed');
+        });
+        it('should check for Withdrawal event being emitted', async function () {
+          expectEvent(
+            block.receipt,
+            'Withdrawal',
+            {
+              src: FIRST_NODE_SIGNER,
+              wad: '29',
             },
           );
         });
@@ -985,7 +1030,88 @@ contract('NodeRegistryLogic', function (accounts) {
           r,
           s,
           { from: convictSubmitter },
-        ), 'block not found');
+        ), 'wrong convict hash'); // 'wrong convict hash' 'block not found'
+      });
+    });
+  });
+
+  describe('Cover the else path of If in updateNode', function () {
+    it('should update node successfully', async function () {
+      block = await nodeRegistryLogicContractInstance.updateNode(
+        SECOND_NODE_SIGNER,
+        `${SECOND_NODE_URL}Test`,
+        SECOND_NODE_PROPS,
+        SECOND_NODE_WEIGHT,
+        0,
+        { from: SECOND_NODE_SIGNER },
+      );
+      assert.equal(block.receipt.status, true, 'Transaction failed');
+    });
+  });
+
+  describe('activateNewLogic', function () {
+    let adminKey;
+    before(async function () {
+      adminKey = await nodeRegistryLogicContractInstance.adminKey.call();
+    });
+    it('reverts when timeout is not set', async function () {
+      await expectRevert(
+        nodeRegistryLogicContractInstance.activateNewLogic(),
+        'no timeout set',
+      );
+    });
+    context('adminUpdateLogic', function () {
+      const [, , , , , , , , , newLogic] = accounts;
+      it('reverts when called by non-admin', async function () {
+        await expectRevert(
+          nodeRegistryLogicContractInstance.adminUpdateLogic(newLogic, { from: newLogic }),
+          'not the admin',
+        );
+      });
+      it('reverts when new logic is address(0)', async function () {
+        await expectRevert(
+          nodeRegistryLogicContractInstance.adminUpdateLogic(
+            constants.ZERO_ADDRESS, { from: adminKey },
+          ),
+          '0x address not supported',
+        );
+      });
+      it('successfully updates new logic', async function () {
+        block = await nodeRegistryLogicContractInstance.adminUpdateLogic(
+          newLogic, { from: adminKey },
+        );
+        assert.equal(block.receipt.status, true, 'Transaction failed');
+      });
+      it('should check LogNewPendingContract event is emitted', async function () {
+        expectEvent(
+          block.receipt,
+          'LogNewPendingContract',
+          {
+            newPendingContract: newLogic,
+          },
+        );
+      });
+      it('reverts when timeout is not yet over', async function () {
+        await expectRevert(
+          nodeRegistryLogicContractInstance.activateNewLogic(),
+          'timeout not yet over',
+        );
+      });
+      it('should check admin logic has been updated', async function () {
+        const updatedLogic = await nodeRegistryLogicContractInstance.pendingNewLogic.call();
+        assert.equal(updatedLogic, newLogic, 'Logic addresses do not match');
+      });
+      it('should check updated timeout is not 0', async function () {
+        const updateTimeout = await nodeRegistryLogicContractInstance.updateTimeout.call();
+        assert.notEqual(updateTimeout.toNumber(), 0, 'Updated timeout is not zero');
+      });
+      it('should activate new logic', async function () {
+        const currentTime = await time.latest();
+        // SINCE NEW LOGIC ACTIVATES AFTER 47 DAYS, THUS FORWARDED THE TIME BY 48 DAYS
+        const forwardTimeBy = currentTime.toNumber() + (48 * 86400);
+        await time.increaseTo(forwardTimeBy);
+        block = await nodeRegistryLogicContractInstance.activateNewLogic();
+        assert.equal(block.receipt.status, true, 'Transaction failed');
       });
     });
   });
