@@ -468,6 +468,8 @@ contract NodeRegistryLogic {
         require(node.signer == _signer, "wrong signer");
 
         uint256 deposit = node.deposit;
+        // BELOW CALL IS NOT REQUIIRED, AS WHILE ADDING THE NODE i.e. registerNode()
+        // WE HAVE ALREADY PERFORMED the checking the node internal properties
         _checkNodePropertiesInternal(deposit);
 
         if (_additionalDeposit > 0) {
@@ -535,6 +537,8 @@ contract NodeRegistryLogic {
 
         IERC20 supportedERC20Token = nodeRegistryData.supportedToken();
 
+        /// THERE IS NO NEED OF REQUIRE OVER HERE
+        /// AS IN TRANSFERFROM THERE IS ALREADY A CHECK WHICH DOES THAT
         require(
             supportedERC20Token.transferFrom(
                 _owner,
