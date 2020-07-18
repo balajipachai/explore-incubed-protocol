@@ -93,4 +93,107 @@ The tests for the contracts are developed using mocha and chai and openzeppelin-
 
 ### IMPROVEMENTS
 
-1. In my opinion in NodeRegistryLogic.sol line no: 477 it is an additional require statement which is not needed, I have added comments over ther too.
+1. In my opinion in NodeRegistryLogic.sol at line no: 477 and line no: 540 are additional require statement which is not needed, I have added comments in the contract too.
+
+2. In NodeRegistryLogic.sol in transferOwnership(address _signer, address _newOwner) is extraneous
+
+    1. require(in3Node.signer == _signer, "wrong signer");  (signerRequire)
+    2. require(si.stage == uint256(Stages.Active), "wrong stage"); (stageRequire)
+    3. require(si.owner == msg.sender, "not the owner"); (ownerRequire)
+
+      - The signerRequire is extraneous, and should be removed, let me answer it why?
+
+      - Since, we pass in _signer as one of the arguments to `transferOwnerhsip(address _signer, address _newOwner)`, in
+      order for `signerRequire` to fail, it must pass `stageRequire` and here notice that the `_signer` passed to the functiona can `exist` or `not exist`, in both the cases the execution will not reach `signerRequire`
+
+      1. If a signer does not exists, in that case the `stageRequire` will fail, thus, reverting from there.
+      2. If a signer exists and is different than the current node signer, in that case the `ownerRequire` will fail, thus, reverting from there.
+
+      Thus in my opinion, the `signerRequire` should be removed from the contract, as it causes an overhead of one more execution to be executed by the EVM and nothing else.
+
+3. Point 2. is also applicable to `updateNode()` `signerRequire`
+
+4. In `updateNode`() call to `_checkNodePropertiesInternal()` is not required, why?
+  - BELOW CALL IS NOT REQUIIRED, AS WHILE ADDING THE NODE i.e. registerNode() WE HAVE ALREADY PERFORMED the checking the node internal properties
+
+5. Point 2. is also applicable to `unregisteringNode()` `signerRequire`
+
+
+### TEST CASES THAT ARE FAILING
+
+I have tried writing the test case for registerNodeFor(), however, it is failing, and the reason I could get close to is 
+the keccak256() calculated inside solidity and the one that is calculated using web3.utils.soliditySha3() are not behaving the same.
+
+#### How I got to the above conclusion?
+
+Added a verify() function in NodeRegistryLogic contract
+
+```javascript
+function verify(
+        bytes32 hash,
+        uint8 v,
+        bytes32 r,
+        bytes32 s,
+        address _signer,
+        address sender
+    ) public view returns (bool) {
+        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+        bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, hash));
+        address signer = ecrecover(prefixedHash, v, r, s);
+        require(
+            _signer == signer,
+            "not the correct signature of the signer provided"
+        );
+        return true;
+    }
+
+Called it from the test case as below:
+
+const tempHash = web3.utils.soliditySha3(
+          THIRD_NODE_URL,
+          THIRD_NODE_PROPS,
+          THIRD_NODE_WEIGHT,
+          thirdOwner,
+        );
+        const {
+          v, r, s,
+        } = web3.eth.accounts.sign(
+          tempHash, '0xe0c673c2ab481fa2989b6da6098a3608fd2750c7c363a0093dcfcf18191ceb60',
+        );
+        console.log('Are keys matching: ', await nodeRegistryLogicContractInstance.verify(
+          THIRD_NODE_SIGNER,
+          v, r, s,
+        ));
+
+Here it returned true.
+```
+
+Then in order to mimic the exact behaviour of 
+
+```javascript
+function verify(
+        string memory _url,
+        uint192 _props,
+        uint64 _weight,
+        uint8 v,
+        bytes32 r,
+        bytes32 s,
+        address _signer,
+        address sender
+    ) public view returns (bool) {
+        bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+        bytes32 hash = keccak256(
+            abi.encodePacked(_url, _props, _weight, sender)
+        );
+        bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, hash));
+        address signer = ecrecover(prefixedHash, v, r, s);
+
+        require(
+            _signer == signer,
+            "not the correct signature of the signer provided"
+        );
+        return true;
+    }
+
+Again called it as I did in the above case however, this time passed url, props, weight, etc the required params, and it reverted in this case.
+```
