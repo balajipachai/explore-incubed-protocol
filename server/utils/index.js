@@ -1,13 +1,13 @@
 /* eslint-disable security/detect-object-injection */
 const in3wasm = require('in3-wasm');
-const Web3 = require('web3');
+const ethereumjsUtil = require('ethereumjs-util');
 const NodeRegistryLogicJSON = require('../build/contracts/NodeRegistryLogic');
 const BlockhashRegistryJSON = require('../build/contracts/BlockhashRegistry');
 const NodeRegistryDataJSON = require('../build/contracts/NodeRegistryData');
 const WETH9JSON = require('../build/contracts/WETH9');
 const logger = require('../config/winston');
 
-let web3;
+let in3;
 
 /**
  * Function to get the IN3 Provider depending on the network
@@ -16,16 +16,17 @@ let web3;
 function getIn3Provider(network) {
   const chainId = `IN3_${network}_CHAIN_ID`;
   console.log('chainId: ', chainId);
-  const in3 = new in3wasm.IN3({
+  in3 = new in3wasm.IN3({
     proof: process.env.IN3_PROOF,
     signatureCount: parseInt(process.env.IN3_SIGNATURE_COUNT, 10),
     requestCount: parseInt(process.env.IN3_REQUEST_COUNT, 10),
     chainId: process.env[chainId],
     replaceLatestBlock: parseInt(process.env.IN3_REPLACE_LATEST_BLOCKS, 10),
     key: process.env.IN3_SIGNING_KEY,
+    maxAttempts: parseInt(process.env.IN3_MAX_ATTEMPTS, 10),
+    timeout: parseInt(process.env.IN3_TIMEOUT, 10),
   });
-  web3 = new Web3(in3.createWeb3Provider());
-  return web3;
+  return in3;
 }
 
 /**
@@ -39,16 +40,16 @@ function getContractInstance(contractName, network) {
   switch (contractName) {
     case 'NodeRegistryLogic':
       deployedOn = `NODEREGISTRY_LOGIC_DEPLOYED_ADDRESS_${network}`;
-      return new web3.eth.Contract(NodeRegistryLogicJSON.abi, process.env[deployedOn]);
+      return in3.eth.contractAt(NodeRegistryLogicJSON.abi, process.env[deployedOn]);
     case 'BlockhashRegistry':
       deployedOn = `BLOCKHASHREGISTRY_LOGIC_DEPLOYED_ADDRESS_${network}`;
-      return new web3.eth.Contract(BlockhashRegistryJSON.abi, process.env[deployedOn]);
+      return in3.eth.contractAt(BlockhashRegistryJSON.abi, process.env[deployedOn]);
     case 'NodeRegistryData':
       deployedOn = `NODEREGISTRYDATA_LOGIC_DEPLOYED_ADDRESS_${network}`;
-      return new web3.eth.Contract(NodeRegistryDataJSON.abi, process.env[deployedOn]);
+      return in3.eth.contractAt(NodeRegistryDataJSON.abi, process.env[deployedOn]);
     case 'WETH9':
       deployedOn = `WETH9_DEPLOYED_ADDRESS_${network}`;
-      return new web3.eth.Contract(WETH9JSON.abi, process.env[deployedOn]);
+      return in3.eth.contractAt(WETH9JSON.abi, process.env[deployedOn]);
     default:
       throw new Error('No case matched in getContractInstance');
   }
@@ -69,23 +70,8 @@ function getFunctionABI(contractName, functionName) {
   }
 }
 
-async function sendContractTransaction(params) {
-  const {
-    to, method, args, privateKey,
-  } = params;
-  console.log('key is: ', privateKey);
-  const receipt = await web3.eth.sendTransaction({
-    to,
-    method,
-    args,
-    confirmations: 2,
-    pk: privateKey,
-  });
-  return receipt;
-}
-
-function getMethod(meethodName, inputs) {
-  let method = `${meethodName}(`;
+function getMethod(methodName, inputs) {
+  let method = `${methodName}(`;
   inputs.forEach((input, index) => {
     if (index !== inputs.length - 1) {
       method += `${input.type},`;
@@ -97,10 +83,44 @@ function getMethod(meethodName, inputs) {
   return method;
 }
 
+function getResponseFromTransactionReceipt(transactionReceipt) {
+  const {
+    blockHash,
+    blockNumber,
+    cumulativeGasUsed,
+    from,
+    gasUsed,
+    status,
+    to,
+    transactionHash,
+  } = transactionReceipt;
+  return {
+    blockHash,
+    blockNumber,
+    cumulativeGasUsed,
+    from,
+    gasUsed,
+    status,
+    to,
+    transactionHash,
+  };
+}
+
+function addressFromPrivateKey(privateKey) {
+  return ethereumjsUtil.bufferToHex(
+    ethereumjsUtil.privateToAddress(
+      ethereumjsUtil.toBuffer(
+        privateKey,
+      ),
+    ),
+  );
+}
+
 module.exports = {
   getIn3Provider,
   getContractInstance,
   getFunctionABI,
-  sendContractTransaction,
   getMethod,
+  getResponseFromTransactionReceipt,
+  addressFromPrivateKey,
 };

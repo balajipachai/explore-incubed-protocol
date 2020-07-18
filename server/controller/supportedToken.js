@@ -2,29 +2,63 @@ const utils = require('../utils/');
 
 async function depositToken(params) {
   const { privateKey, minimumDeposit, network } = params;
-  const web3 = utils.getIn3Provider(network); // This sets the web3 object
-  const contractInstance = utils.getContractInstance(process.env.WETH9_CONTRACT_NAME, network);
-  // const functionABI = utils.getFunctionABI(process.env.WETH9_CONTRACT_NAME, 'deposit');
-  // eslint-disable-next-line prefer-destructuring
-  // const { inputs } = functionABI[0];
-  const method = 'transfer(address,uint256)';
-  console.log('method: ', method, privateKey);
-  // console.log(Object.keys(web3.currentProvider));
-  console.log('****************', web3.eth.defaultAccount);
-  web3.eth.defaultAccount = params.from;
-  console.log('****************', web3.eth.defaultAccount);
-  // web3.currentProvider.config.key = privateKey;
-  const receipt = await utils.sendContractTransaction({
-    to: contractInstance.address,
+  const in3 = utils.getIn3Provider(network); // This sets the web3 object
+  const tokenContractinstance = utils.getContractInstance(process.env.WETH9_CONTRACT_NAME, network);
+  const method = 'deposit()';
+  const value = parseInt(minimumDeposit, 10);
+  const accountAddress = utils.addressFromPrivateKey(privateKey);
+  const nonce = await in3.eth.getTransactionCount(accountAddress);
+  const receipt = await in3.eth.sendTransaction({
+    // eslint-disable-next-line no-underscore-dangle
+    to: tokenContractinstance._address,
     method,
-    args: ['0x5564E6744E613B0AfBc8f83d13781e49d52D9b2b', minimumDeposit],
-    privateKey,
+    args: [],
+    confirmations: 2,
+    value,
+    nonce,
+    pk: privateKey,
   });
-  // const receipt = await contractInstance.methods.deposit().send({ from: '0x27c2d54128FfF7B10d14a1f16836760CeF68C154' });
-  // web3.currentProvider.config.key = process.env.IN3_SIGNING_KEY;
-  return receipt;
+  // Set the Private Key again to IN3_SIGNING_KEY
+  in3.config.key = process.env.IN3_SIGNING_KEY;
+  return utils.getResponseFromTransactionReceipt(receipt);
+}
+
+async function approveToken(params) {
+  const {
+    privateKey, network, to, amount,
+  } = params;
+  let approveTo = to;
+  const in3 = utils.getIn3Provider(network); // This sets the web3 object
+  const tokenContractinstance = utils.getContractInstance(process.env.WETH9_CONTRACT_NAME, network);
+  if (approveTo === '') {
+    // It implies NodeRegistryLogic Contract has to be approved for registering a node
+    const nodeRegLogicConInstance = utils.getContractInstance(
+      process.env.NODEREGISTRYLOGIC_CONTRACT_NAME, network,
+    );
+    // eslint-disable-next-line no-underscore-dangle
+    approveTo = nodeRegLogicConInstance._address;
+  }
+  const functionABI = utils.getFunctionABI(process.env.WETH9_CONTRACT_NAME, 'approve');
+  // eslint-disable-next-line prefer-destructuring
+  const { inputs } = functionABI[0];
+  const method = utils.getMethod('approve', inputs);
+  const accountAddress = utils.addressFromPrivateKey(privateKey);
+  const nonce = await in3.eth.getTransactionCount(accountAddress);
+  const receipt = await in3.eth.sendTransaction({
+    // eslint-disable-next-line no-underscore-dangle
+    to: tokenContractinstance._address,
+    method,
+    args: [approveTo, amount],
+    confirmations: 2,
+    nonce,
+    pk: privateKey,
+  });
+  // Set the Private Key again to IN3_SIGNING_KEY
+  in3.config.key = process.env.IN3_SIGNING_KEY;
+  return utils.getResponseFromTransactionReceipt(receipt);
 }
 
 module.exports = {
   depositToken,
+  approveToken,
 };

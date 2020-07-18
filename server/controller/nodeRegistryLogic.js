@@ -46,9 +46,32 @@ async function getPublicVariables(params) {
 
 async function registerNode(params) {
   const {
-    url, props, weight, deposit,
+    url, props, weight, minimumDeposit, network, privateKey,
   } = params;
+  const in3 = utils.getIn3Provider(network); // This sets the web3 object
+  const nodeRegLogicConInstance = utils.getContractInstance(
+    process.env.NODEREGISTRYLOGIC_CONTRACT_NAME, network,
+  );
+  const functionABI = utils.getFunctionABI(process.env.NODEREGISTRYLOGIC_CONTRACT_NAME, 'registerNode');
+  // eslint-disable-next-line prefer-destructuring
+  const { inputs } = functionABI[0];
+  const method = utils.getMethod('registerNode', inputs);
+  const accountAddress = utils.addressFromPrivateKey(privateKey);
+  const nonce = await in3.eth.getTransactionCount(accountAddress);
+  const receipt = await in3.eth.sendTransaction({
+    // eslint-disable-next-line no-underscore-dangle
+    to: nodeRegLogicConInstance._address,
+    method,
+    args: [url, props, weight, minimumDeposit],
+    confirmations: 2,
+    nonce,
+    pk: privateKey,
+  });
+  // Set the Private Key again to IN3_SIGNING_KEY
+  in3.config.key = process.env.IN3_SIGNING_KEY;
+  return utils.getResponseFromTransactionReceipt(receipt);
 }
+
 module.exports = {
   getPublicVariables,
   registerNode,

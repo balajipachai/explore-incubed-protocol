@@ -11,9 +11,23 @@ async function supportedTokenDeposit(params) {
   return receipt;
 }
 
+async function supportedTokenApproval(params) {
+  const receipt = await supportedToken.approveToken(params);
+  return receipt;
+}
+
 async function nodeRegistryLogicRegisterNode(params) {
-  const data = await supportedTokenDeposit(params);
-  // const data = await nodeRegistryLogic.registerNode(params);
+  const {
+    privateKey, network, to, minimumDeposit: amount,
+  } = params;
+  await supportedTokenDeposit(params);
+  await supportedTokenApproval({
+    privateKey,
+    network,
+    to,
+    amount,
+  });
+  const data = await nodeRegistryLogic.registerNode(params);
   return data;
 }
 
