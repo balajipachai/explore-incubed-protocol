@@ -1,3 +1,4 @@
+/* eslint-disable mocha/no-setup-in-describe */
 /* eslint-disable no-undef */
 /* eslint-disable node/no-unpublished-require */
 /* eslint-disable func-names */
@@ -14,6 +15,9 @@ const {
 } = require('@openzeppelin/test-helpers');
 const { assert } = require('chai');
 const BigNumber = require('bignumber.js');
+const Web3 = require('web3');
+// LOCAL GANACHE PROVIDER
+const web3 = new Web3(new Web3.providers.HttpProvider('http://127.0.0.1:8545'));
 
 const BlockhashRegistry = artifacts.require('BlockhashRegistry');
 const NodeRegistryData = artifacts.require('NodeRegistryData');
@@ -21,7 +25,7 @@ const NodeRegistryLogic = artifacts.require('NodeRegistryLogic');
 const WETH9 = artifacts.require('WETH9');
 
 contract('NodeRegistryLogic', function (accounts) {
-  const [coinbase, account1, signer1, signer2] = accounts;
+  const [coinbase, account1, signer1, signer2, signer3, signer4] = accounts;
   const minDeposit = 1000;
 
   let nodeRegistryLogicContractInstance;
@@ -41,6 +45,18 @@ contract('NodeRegistryLogic', function (accounts) {
   const SECOND_NODE_WEIGHT = 51;
   const SECOND_NODE_DEPOSIT = minDeposit;
   const SECOND_NODE_SIGNER = signer2;
+
+  const THIRD_NODE_URL = 'https://mybootnode-C.com';
+  const THIRD_NODE_PROPS = 61254;
+  const THIRD_NODE_WEIGHT = 27;
+  const THIRD_NODE_DEPOSIT = minDeposit;
+  const THIRD_NODE_SIGNER = signer3;
+
+  const FOURTH_NODE_URL = 'https://mybootnode-D.com';
+  const FOURTH_NODE_PROPS = 61214;
+  const FOURTH_NODE_WEIGHT = 75;
+  const FOURTH_NODE_DEPOSIT = minDeposit;
+  const FOURTH_NODE_SIGNER = signer4;
 
   before(async function () {
     blockhashRegistryContractInstance = await BlockhashRegistry.new({ from: coinbase });
@@ -232,7 +248,8 @@ contract('NodeRegistryLogic', function (accounts) {
         it('should check for emitting of Deposit event', async function () {
           expectEvent(
             block.receipt,
-            'Deposit', {
+            'Deposit',
+            {
               dst: FIRST_NODE_SIGNER,
               wad: '1000',
             },
@@ -245,10 +262,11 @@ contract('NodeRegistryLogic', function (accounts) {
           );
           assert.equal(block.receipt.status, true, 'Transaction failed');
         });
-        it('should check for emitting of Approve event', async function () {
+        it('should check for emitting of Approval event', async function () {
           expectEvent(
             block.receipt,
-            'Approval', {
+            'Approval',
+            {
               src: FIRST_NODE_SIGNER,
               guy: nodeRegistryLogicContractInstance.address,
               wad: '1000',
@@ -268,13 +286,20 @@ contract('NodeRegistryLogic', function (accounts) {
         it('should check for emitting of LogNodeRegistered event', async function () {
           expectEvent(
             block.receipt,
-            'LogNodeRegistered', {
+            'LogNodeRegistered',
+            {
               url: FIRST_NODE_URL,
               props: '65535',
               signer: FIRST_NODE_SIGNER,
               deposit: '1000',
             },
           );
+        });
+        it('should check the node has been registered successfully', async function () {
+          const signerInfo = await nodeRegistryDataContractInstance.getSignerInformation.call(
+            FIRST_NODE_SIGNER,
+          );
+          assert.equal(signerInfo[2], '1', 'Node registration failed.');
         });
       });
 
@@ -289,7 +314,8 @@ contract('NodeRegistryLogic', function (accounts) {
         it('should check for emitting of Deposit event', async function () {
           expectEvent(
             block.receipt,
-            'Deposit', {
+            'Deposit',
+            {
               dst: SECOND_NODE_SIGNER,
               wad: '1000',
             },
@@ -302,10 +328,11 @@ contract('NodeRegistryLogic', function (accounts) {
           );
           assert.equal(block.receipt.status, true, 'Transaction failed');
         });
-        it('should check for emitting of Approve event', async function () {
+        it('should check for emitting of Approval event', async function () {
           expectEvent(
             block.receipt,
-            'Approval', {
+            'Approval',
+            {
               src: SECOND_NODE_SIGNER,
               guy: nodeRegistryLogicContractInstance.address,
               wad: '1000',
@@ -325,7 +352,8 @@ contract('NodeRegistryLogic', function (accounts) {
         it('should check for emitting of LogNodeRegistered event', async function () {
           expectEvent(
             block.receipt,
-            'LogNodeRegistered', {
+            'LogNodeRegistered',
+            {
               url: SECOND_NODE_URL,
               props: '65534',
               signer: SECOND_NODE_SIGNER,
@@ -334,10 +362,631 @@ contract('NodeRegistryLogic', function (accounts) {
           );
         });
       });
+
+      context('FOR THIRD NODE', function () {
+        it('Deposit minimum deposit into WETH9 contract from signer3', async function () {
+          block = await supportedTokenContractInstance.deposit({
+            from: THIRD_NODE_SIGNER,
+            value: minDeposit,
+          });
+          assert.equal(block.receipt.status, true, 'Transaction failed');
+        });
+        it('should check for emitting of Deposit event', async function () {
+          expectEvent(
+            block.receipt,
+            'Deposit',
+            {
+              dst: THIRD_NODE_SIGNER,
+              wad: '1000',
+            },
+          );
+        });
+        it('signer3 approves NodeRegistryLogic contract to spend minDeposit tokens', async function () {
+          block = await supportedTokenContractInstance.approve(
+            nodeRegistryLogicContractInstance.address, minDeposit,
+            { from: THIRD_NODE_SIGNER },
+          );
+          assert.equal(block.receipt.status, true, 'Transaction failed');
+        });
+        it('should check for emitting of Approval event', async function () {
+          expectEvent(
+            block.receipt,
+            'Approval',
+            {
+              src: THIRD_NODE_SIGNER,
+              guy: nodeRegistryLogicContractInstance.address,
+              wad: '1000',
+            },
+          );
+        });
+        it('should register a node succesfully', async function () {
+          block = await nodeRegistryLogicContractInstance.registerNode(
+            THIRD_NODE_URL,
+            THIRD_NODE_PROPS,
+            THIRD_NODE_WEIGHT,
+            THIRD_NODE_DEPOSIT,
+            { from: THIRD_NODE_SIGNER },
+          );
+          assert.equal(block.receipt.status, true, 'Transaction failed');
+        });
+        it('should check for emitting of LogNodeRegistered event', async function () {
+          expectEvent(
+            block.receipt,
+            'LogNodeRegistered',
+            {
+              url: THIRD_NODE_URL,
+              props: THIRD_NODE_PROPS.toString(),
+              signer: THIRD_NODE_SIGNER,
+              deposit: '1000',
+            },
+          );
+        });
+      });
+
+      context('FOR FOURTH NODE', function () {
+        it('Deposit minimum deposit into WETH9 contract from signer4', async function () {
+          block = await supportedTokenContractInstance.deposit({
+            from: FOURTH_NODE_SIGNER,
+            value: minDeposit,
+          });
+          assert.equal(block.receipt.status, true, 'Transaction failed');
+        });
+        it('should check for emitting of Deposit event', async function () {
+          expectEvent(
+            block.receipt,
+            'Deposit',
+            {
+              dst: FOURTH_NODE_SIGNER,
+              wad: '1000',
+            },
+          );
+        });
+        it('signer4 approves NodeRegistryLogic contract to spend minDeposit tokens', async function () {
+          block = await supportedTokenContractInstance.approve(
+            nodeRegistryLogicContractInstance.address, minDeposit,
+            { from: FOURTH_NODE_SIGNER },
+          );
+          assert.equal(block.receipt.status, true, 'Transaction failed');
+        });
+        it('should check for emitting of Approval event', async function () {
+          expectEvent(
+            block.receipt,
+            'Approval',
+            {
+              src: FOURTH_NODE_SIGNER,
+              guy: nodeRegistryLogicContractInstance.address,
+              wad: '1000',
+            },
+          );
+        });
+        it('should register a node succesfully', async function () {
+          block = await nodeRegistryLogicContractInstance.registerNode(
+            FOURTH_NODE_URL,
+            FOURTH_NODE_PROPS,
+            FOURTH_NODE_WEIGHT,
+            FOURTH_NODE_DEPOSIT,
+            { from: FOURTH_NODE_SIGNER },
+          );
+          assert.equal(block.receipt.status, true, 'Transaction failed');
+        });
+        it('should check for emitting of LogNodeRegistered event', async function () {
+          expectEvent(
+            block.receipt,
+            'LogNodeRegistered',
+            {
+              url: FOURTH_NODE_URL,
+              props: FOURTH_NODE_PROPS.toString(),
+              signer: FOURTH_NODE_SIGNER,
+              deposit: '1000',
+            },
+          );
+        });
+      });
     });
   });
 
-  describe('registerNodeFor', () => {
-      
+  describe('registerNodeFor', function () {
+    const [, , , , , , fifthOwner, signer5] = accounts;
+    const FIFTH_NODE_URL = 'https://mybootnode-E.com';
+    const FIFTH_NODE_PROPS = 65530;
+    const FIFTH_NODE_WEIGHT = 23;
+    const FIFTH_NODE_DEPOSIT = 1250;
+    const FIFTH_NODE_SIGNER = signer5;
+    let V;
+    let R;
+    let S;
+
+    before(async function () {
+      const tempHash = web3.utils.soliditySha3(
+        FIFTH_NODE_URL,
+        FIFTH_NODE_PROPS,
+        FIFTH_NODE_WEIGHT,
+        FIFTH_NODE_SIGNER,
+      );
+      const prefixedHash = web3.utils.soliditySha3(
+        '\x19Ethereum Signed Message:\n32',
+        tempHash,
+      );
+      const { v, r, s } = web3.eth.accounts.sign(
+        prefixedHash, '0xe0c673c2ab481fa2989b6da6098a3608fd2750c7c363a0093dcfcf18191ceb60',
+      );
+      V = v;
+      R = r;
+      S = s;
+      await supportedTokenContractInstance.deposit({
+        from: fifthOwner,
+        value: FIFTH_NODE_DEPOSIT,
+      });
+      await supportedTokenContractInstance.approve(
+        nodeRegistryLogicContractInstance.address, FIFTH_NODE_DEPOSIT,
+        { from: fifthOwner },
+      );
+    });
+
+    context('reverts', function () {
+      it('should revert when v is neither 27 nor 28', async function () {
+        await expectRevert(
+          nodeRegistryLogicContractInstance.registerNodeFor(
+            FIFTH_NODE_URL,
+            FIFTH_NODE_PROPS,
+            FIFTH_NODE_SIGNER,
+            FIFTH_NODE_WEIGHT,
+            FIFTH_NODE_DEPOSIT,
+            39,
+            R,
+            S,
+            { from: fifthOwner },
+          ),
+          'invalid signature',
+        );
+      });
+
+      it('should revert when incorrect signature is provided', async function () {
+        await expectRevert(
+          nodeRegistryLogicContractInstance.registerNodeFor(
+            FIFTH_NODE_URL,
+            FIFTH_NODE_PROPS,
+            FIFTH_NODE_SIGNER,
+            FIFTH_NODE_WEIGHT,
+            FIFTH_NODE_DEPOSIT,
+            V,
+            R,
+            S,
+            { from: fifthOwner },
+          ),
+          'not the correct signature of the signer provided',
+        );
+      });
+    });
+
+    // context('success', function () {
+    //   before(async function () {
+    //     const tempHash = web3.utils.soliditySha3(
+    //       THIRD_NODE_URL,
+    //       THIRD_NODE_PROPS,
+    //       THIRD_NODE_WEIGHT,
+    //       fifthOwner,
+    //     );
+    //     const {
+    //       v, r, s,
+    //     } = web3.eth.accounts.sign(
+    //       tempHash, '0xe0c673c2ab481fa2989b6da6098a3608fd2750c7c363a0093dcfcf18191ceb60',
+    //     );
+    //     console.log('Are keys matching: ', await nodeRegistryLogicContractInstance.verify(
+    //       THIRD_NODE_URL,
+    //       THIRD_NODE_PROPS,
+    //       THIRD_NODE_WEIGHT,
+    //       v, r, s, THIRD_NODE_SIGNER,
+    //       fifthOwner,
+    //     ));
+    //     V = v;
+    //     R = r;
+    //     S = s;
+    //   });
+    //   it('should register a node succesfully', async function () {
+    //     console.log(V, R, S);
+    //     block = await nodeRegistryLogicContractInstance.registerNodeFor(
+    //       THIRD_NODE_URL,
+    //       THIRD_NODE_PROPS,
+    //       THIRD_NODE_SIGNER,
+    //       THIRD_NODE_WEIGHT,
+    //       THIRD_NODE_DEPOSIT,
+    //       V,
+    //       R,
+    //       S,
+    //       { from: fifthOwner },
+    //     );
+    //     assert.equal(block.receipt.status, true, 'Transaction failed');
+    //   });
+    //   it('should check for emitting of LogNodeRegistered event', async function () {
+    //     expectEvent(
+    //       block.receipt,
+    //       'LogNodeRegistered', {
+    //       url: THIRD_NODE_URL,
+    //       props: '65530',
+    //       signer: THIRD_NODE_SIGNER,
+    //       deposit: '1250',
+    //     },
+    //     );
+    //   });
+    // });
+  });
+
+  describe('transferOwnership', function () {
+    const [, , , , , , , , newOwner, dummySigner] = accounts;
+    context('reverts', function () {
+      it('when new owner is address 0', async function () {
+        await expectRevert(
+          nodeRegistryLogicContractInstance.transferOwnership(
+            FIRST_NODE_SIGNER,
+            constants.ZERO_ADDRESS,
+            { from: FIRST_NODE_SIGNER },
+          ),
+          '0x0 not allowed',
+        );
+      });
+      it('when caller is not the owner', async function () {
+        await expectRevert(
+          nodeRegistryLogicContractInstance.transferOwnership(
+            FIRST_NODE_SIGNER,
+            newOwner,
+            { from: newOwner },
+          ),
+          'not the owner',
+        );
+      });
+      it('in case of wrong stage', async function () {
+        await expectRevert(
+          nodeRegistryLogicContractInstance.transferOwnership(
+            dummySigner,
+            newOwner,
+            { from: FIRST_NODE_SIGNER },
+          ),
+          'wrong stage',
+        );
+      });
+      it('in case wrong signer', async function () {
+        assert.ok('The else path for require will never be called');
+      });
+    });
+    context('success', function () {
+      it('should transfer ownership successfully', async function () {
+        block = await nodeRegistryLogicContractInstance.transferOwnership(
+          FIRST_NODE_SIGNER,
+          newOwner,
+          { from: FIRST_NODE_SIGNER },
+        );
+        assert.equal(block.receipt.status, true, 'Transaction failed');
+      });
+      it('should check for LogOwnershipChanged event', async function () {
+        expectEvent(
+          block.receipt,
+          'LogOwnershipChanged',
+          {
+            signer: FIRST_NODE_SIGNER,
+            oldOwner: FIRST_NODE_SIGNER,
+            newOwner,
+          },
+        );
+      });
+      it('should check the owner has changed', async function () {
+        const details = await nodeRegistryDataContractInstance.getSignerInformation.call(
+          FIRST_NODE_SIGNER,
+        );
+        assert.equal(details[1], newOwner, 'Owner has not changed');
+      });
+    });
+  });
+
+  describe('updateNode', function () {
+    const [, , , , , , , , newOwner, dummySigner] = accounts;
+    const ADDITIONAL_DEPOSIT = 120;
+    context('reverts', function () {
+      it('in case of wrong stage', async function () {
+        await expectRevert(
+          nodeRegistryLogicContractInstance.updateNode(
+            dummySigner,
+            FIRST_NODE_URL,
+            FIRST_NODE_PROPS,
+            FIRST_NODE_WEIGHT,
+            ADDITIONAL_DEPOSIT,
+            { from: FIRST_NODE_SIGNER },
+          ),
+          'wrong stage',
+        );
+      });
+      it('when caller is not the owner', async function () {
+        await expectRevert(
+          nodeRegistryLogicContractInstance.updateNode(
+            FIRST_NODE_SIGNER,
+            FIRST_NODE_URL,
+            FIRST_NODE_PROPS,
+            FIRST_NODE_WEIGHT,
+            ADDITIONAL_DEPOSIT,
+            { from: dummySigner },
+          ),
+          'not the owner',
+        );
+      });
+      it('in case of wrong signer', async function () {
+        assert.ok('The else path for require will never be called');
+      });
+    });
+    context('success', function () {
+      before(async function () {
+        // ADDITIONAL DEPOSIT TO PASS
+        // DEPOSIT
+        await supportedTokenContractInstance.deposit({
+          from: newOwner,
+          value: ADDITIONAL_DEPOSIT,
+        });
+
+        // APPROVE
+        await supportedTokenContractInstance.approve(
+          nodeRegistryLogicContractInstance.address, ADDITIONAL_DEPOSIT,
+          { from: newOwner },
+        );
+      });
+      it('should update node successfully', async function () {
+        block = await nodeRegistryLogicContractInstance.updateNode(
+          FIRST_NODE_SIGNER,
+          FIRST_NODE_URL,
+          FIRST_NODE_PROPS,
+          FIRST_NODE_WEIGHT,
+          ADDITIONAL_DEPOSIT,
+          { from: newOwner },
+        );
+        assert.equal(block.receipt.status, true, 'Transaction failed');
+      });
+      it('should check for LogNodeUpdated event', async function () {
+        expectEvent(
+          block.receipt,
+          'LogNodeUpdated',
+          {
+            url: FIRST_NODE_URL,
+            props: FIRST_NODE_PROPS.toString(),
+            signer: FIRST_NODE_SIGNER,
+            deposit: (minDeposit + ADDITIONAL_DEPOSIT).toString(),
+          },
+        );
+      });
+    });
+  });
+
+  describe('unregisteringNode', function () {
+    const [, , , , , , , , newOwner, dummySigner] = accounts;
+    context('reverts', function () {
+      it('in case of wrong stage', async function () {
+        await expectRevert(
+          nodeRegistryLogicContractInstance.unregisteringNode(
+            dummySigner,
+            { from: FIRST_NODE_SIGNER },
+          ),
+          'wrong stage',
+        );
+      });
+      it('when caller is not the owner', async function () {
+        await expectRevert(
+          nodeRegistryLogicContractInstance.unregisteringNode(
+            FIRST_NODE_SIGNER,
+            { from: dummySigner },
+          ),
+          'not the owner',
+        );
+      });
+      it('in case of wrong signer', async function () {
+        assert.ok('The else path for require will never be called');
+      });
+    });
+    context('success', function () {
+      it('should unregister a node successfully', async function () {
+        block = await nodeRegistryLogicContractInstance.unregisteringNode(
+          FIRST_NODE_SIGNER,
+          { from: newOwner },
+        );
+        assert.equal(block.receipt.status, true, 'Transaction failed');
+      });
+      it('should check for LogNodeUpdated event', async function () {
+        expectEvent(
+          block.receipt,
+          'LogNodeRemoved',
+          {
+            url: FIRST_NODE_URL,
+            signer: FIRST_NODE_SIGNER,
+          },
+        );
+      });
+      it('should check the node has been unregistered', async function () {
+        const details = await nodeRegistryDataContractInstance.getSignerInformation.call(
+          FIRST_NODE_SIGNER,
+        );
+        assert.equal(details[2], '3', 'Node not removed');
+      });
+    });
+  });
+
+  describe('returnDeposit', function () {
+    const [, , , , , , , , newOwner, dummySigner] = accounts;
+    context('reverts', function () {
+      it('in case of wrong stage', async function () {
+        await expectRevert(
+          nodeRegistryLogicContractInstance.returnDeposit(
+            SECOND_NODE_SIGNER,
+            { from: SECOND_NODE_SIGNER },
+          ),
+          'wrong stage',
+        );
+      });
+      it('when caller is not the owner', async function () {
+        await expectRevert(
+          nodeRegistryLogicContractInstance.returnDeposit(
+            FIRST_NODE_SIGNER,
+            { from: dummySigner },
+          ),
+          'not the owner of the node',
+        );
+      });
+      it('when deposit is still locked', async function () {
+        await expectRevert(
+          nodeRegistryLogicContractInstance.returnDeposit(
+            FIRST_NODE_SIGNER,
+            { from: newOwner },
+          ),
+          'deposit still locked',
+        );
+      });
+    });
+    context('success', function () {
+      before(async function () {
+        // should increase time by 40 days s.t. deposit succeeds
+        const currentTime = await time.latest();
+        // 86400 - Seconds In a Day
+        const forwardTimeBy = (currentTime.toNumber() + (41 * 86400));
+        await time.increaseTo(forwardTimeBy);
+      });
+      it('should return deposit successfully', async function () {
+        block = await nodeRegistryLogicContractInstance.returnDeposit(
+          FIRST_NODE_SIGNER,
+          { from: newOwner },
+        );
+        assert.equal(block.receipt.status, true, 'Transaction failed');
+      });
+      it('should check for LogDepositReturned event', async function () {
+        expectEvent(
+          block.receipt,
+          'LogDepositReturned',
+          {
+            signer: FIRST_NODE_SIGNER,
+            owner: newOwner,
+            deposit: '1120',
+            erc20Token: supportedTokenContractInstance.address,
+          },
+        );
+      });
+      context('should check deposits returned', function () {
+        let signerDetails;
+        before(async function () {
+          signerDetails = await nodeRegistryDataContractInstance.getSignerInformation.call(
+            FIRST_NODE_SIGNER,
+          );
+        });
+        it('the lockedTime should be 0', async function () {
+          assert.equal(signerDetails[0], '0', 'Locked time is not zero');
+        });
+        it('the owner should be address(0)', async function () {
+          assert.equal(signerDetails[1], constants.ZERO_ADDRESS, 'Owner is not address(0)');
+        });
+        it('the stage should be 0', async function () {
+          assert.equal(signerDetails[2], '0', 'Stage is not zero');
+        });
+        it('the depositAmount should be 0', async function () {
+          assert.equal(signerDetails[3], '0', 'Deposit amount is not zero');
+        });
+        it('the index should be 0', async function () {
+          assert.equal(signerDetails[4], '0', 'Index is not zero');
+        });
+      });
+    });
+  });
+
+  describe('adminRemoveNodeFromRegistry', function () {
+    const [, , , , , , , , dummySigner] = accounts;
+    let adminKey;
+    before(async function () {
+      adminKey = await nodeRegistryLogicContractInstance.adminKey.call();
+    });
+    context('reverts', function () {
+      it('in case of wrong stage', async function () {
+        await expectRevert(
+          nodeRegistryLogicContractInstance.adminRemoveNodeFromRegistry(
+            dummySigner,
+            { from: adminKey },
+          ),
+          'wrong stage',
+        );
+      });
+      it('when caller is not the admin', async function () {
+        await expectRevert(
+          nodeRegistryLogicContractInstance.adminRemoveNodeFromRegistry(
+            THIRD_NODE_SIGNER,
+            { from: dummySigner },
+          ),
+          'not the admin',
+        );
+      });
+    });
+    context('success', function () {
+      it('should unregister a node by admin successfully', async function () {
+        block = await nodeRegistryLogicContractInstance.adminRemoveNodeFromRegistry(
+          THIRD_NODE_SIGNER,
+          { from: adminKey },
+        );
+        assert.equal(block.receipt.status, true, 'Transaction failed');
+      });
+      it('should check for LogNodeRemoved event', async function () {
+        expectEvent(
+          block.receipt,
+          'LogNodeRemoved',
+          {
+            url: THIRD_NODE_URL,
+            signer: THIRD_NODE_SIGNER,
+          },
+        );
+      });
+      it('should check the node has been removed by admin successfully', async function () {
+        const details = await nodeRegistryDataContractInstance.getSignerInformation.call(
+          THIRD_NODE_SIGNER,
+        );
+        assert.equal(details[2], '3', 'Node not removed');
+      });
+    });
+  });
+
+  describe('convict', function () {
+    const [, , , , , , , , convictSubmitter] = accounts;
+    const wrongBlockHash = '0xf543410ea7656c24fe24e90a04fd47c46aa9f036b53aaf48322848a297ed10fa';
+    it('before convict submission the convictMapping should be = 0', async function () {
+      const convictMapping = await nodeRegistryDataContractInstance.convictMapping.call(
+        convictSubmitter,
+        wrongBlockHash,
+      );
+      assert.equal(convictMapping.toNumber(), 0, 'Convict mapping do not match');
+    });
+    it('should submit convict request', async function () {
+      block = await nodeRegistryLogicContractInstance.convict(
+        wrongBlockHash, { from: convictSubmitter },
+      );
+      assert.equal(block.receipt.status, true, 'Transaction failed');
+    });
+    it('after convict submission the convictMapping should be > 0', async function () {
+      const convictMapping = await nodeRegistryDataContractInstance.convictMapping.call(
+        convictSubmitter,
+        wrongBlockHash,
+      );
+      assert.notEqual(convictMapping.toNumber(), 0, 'Convict mapping do not match');
+    });
+  });
+
+  describe('revealConvict', function () {
+    const [, , , , , , , , convictSubmitter] = accounts;
+    const wrongBlockHash = '0xf543410ea7656c24fe24e90a04fd47c46aa9f036b53aaf48322848a297ed10fa';
+    const blockNumber = 59;
+    const v = '0x1b';
+    const r = '0x876f9e052d627e9a6fd45a6f07bb99731ecace5678a88432b3bf7e6f6f250930';
+    const s = '0xfb08335d965873460ca3b6d77e2c3eeaac24de4c644b2c0405cb7af250ac00a';
+    const signer = '0x0ad6a4a3fd5254382533f73e485ab4ebe24e783f';
+    context('reverts', function () {
+      it('reverts when block not found', async function () {
+        expectRevert(nodeRegistryLogicContractInstance.revealConvict(
+          signer,
+          wrongBlockHash,
+          blockNumber,
+          v,
+          r,
+          s,
+          { from: convictSubmitter },
+        ), 'block not found');
+      });
+    });
   });
 });
