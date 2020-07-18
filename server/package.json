@@ -9,7 +9,7 @@
     "clean": "rm -rf .config .npm .node-gyp node_modules && npm install",
     "cleanSol": "rm -rf build/contracts",
     "compile": " truffle compile && npm run lint",
-    "coverage": "scripts/coverage.sh",
+    "coverage": "truffle run coverage",
     "lint": "solhint \"contracts/**/*.sol\"",
     "migrate": " truffle migrate",
     "migrateAll": " truffle migrate --reset",
@@ -57,6 +57,6 @@
     "eslint-plugin-security": "^1.4.0",
     "mocha": "^5.2.0",
     "solhint": "^2.3.0",
-    "solidity-coverage": "^0.7.1"
+    "solidity-coverage": "^0.7.9"
   }
 }
