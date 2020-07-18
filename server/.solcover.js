@@ -5,5 +5,7 @@ module.exports = {
     copyPackages: ['openzeppelin-solidity'],
     skipFiles: [
         'Migrations.sol',
+        'Proxy.sol',
+        'HelloWorld.sol',
     ]
 };
