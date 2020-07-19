@@ -14,6 +14,7 @@ const swaggerJSON = require('./config/swagger.json');
 const customCssHideSwaggerHeader = '.swagger-ui .topbar { display: none !important }';
 
 const mainRoute = require('./routes/index');
+const nodeRegDataRoute = require('./routes/nodeRegistryData');
 
 const app = express();
 
@@ -78,6 +79,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/', mainRoute);
+app.use('/noderegistrydata', nodeRegDataRoute);
 
 // catch 404 and forward to error handler
 app.use((req, res) => {

@@ -1,5 +1,6 @@
 const nodeRegistryLogic = require('./nodeRegistryLogic');
 const supportedToken = require('./supportedToken');
+const nodeRegistryData = require('./nodeRegistryData');
 
 async function getNodeRegistryLogicPublicVariables(params) {
   const data = await nodeRegistryLogic.getPublicVariables(params);
@@ -9,6 +10,11 @@ async function getNodeRegistryLogicPublicVariables(params) {
 async function supportedTokenApproval(params) {
   const receipt = await supportedToken.approveToken(params);
   return receipt;
+}
+
+async function nodeRegistryDataGetIN3NodeInfo(params) {
+  const data = await nodeRegistryData.getIN3NodeInfo(params);
+  return data;
 }
 
 async function nodeRegistryLogicActivateNewLogicContract(params) {
@@ -89,8 +95,10 @@ async function nodeRegistryLogicUpdateIN3Node(params) {
 }
 
 
+
 module.exports = {
   getNodeRegistryLogicPublicVariables,
+  nodeRegistryDataGetIN3NodeInfo,
   nodeRegistryLogicActivateNewLogicContract,
   nodeRegistryLogicAdminUpdateLogic,
   nodeRegistryLogicAdminRemoveNodeFromRegistry,

@@ -202,7 +202,4 @@ router.get('/noderegistrylogic/all/public/state/variables', async (req, res) => 
   }
 });
 
-
-
-
 module.exports = router;
