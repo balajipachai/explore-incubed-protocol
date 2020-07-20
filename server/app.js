@@ -3,21 +3,14 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
-const redis = require('redis');
-const expressSession = require('express-session');
-const RedisStore = require('connect-redis')(expressSession);
-const swaggerUi = require('swagger-ui-express');
 const winston = require('./config/winston');
 
-const swaggerJSON = require('./config/swagger.json');
-
-const customCssHideSwaggerHeader = '.swagger-ui .topbar { display: none !important }';
 
 const mainRoute = require('./routes/index');
 const nodeRegDataRoute = require('./routes/nodeRegistryData');
+const logger = require('./config/winston');
 
 const app = express();
-
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 app.use(morgan('combined', { stream: winston.stream }));
@@ -25,48 +18,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'client/dist/incubed-frontend')));
-app.use(
-  '/api-docs',
-  swaggerUi.serve,
-  swaggerUi.setup(
-    swaggerJSON,
-    null,
-    null,
-    customCssHideSwaggerHeader,
-    null,
-    null,
-    "API's Documentation - Exploring INCUBED Protocol",
-  ),
-);
-
-/**
- * Configuring the express session store
- * @param {String} secret This is the secret used to sign the session ID cookie
- * @param {String} key Cookie name defaulting to connect.land-records
- * @param {Object} cookie Cookie object
- * @param {Boolean} rolling Force a session identifier cookie to be set on every response
- * @param {Boolean} resave
- * @param {Boolean} saveUninitialized Forces a session that is "uninitialized" to be saved
- * to the store. A session is uninitialized when it is new but not modified.
- * @param {Object} store Memory store
- * @param {String} destroy Control the result of unsetting req.session
- */
-app.use(
-  expressSession({
-    secret: '1bfT8SHARUSHIMAUQybalaviggC6DwQ',
-    key: 'land-records',
-    cookie: {
-      secure: false, // cookie can be accessed over http
-    },
-    rolling: true,
-    resave: true,
-    saveUninitialized: false,
-    store: new RedisStore({
-      client: redis.createClient(process.env.REDIS_URL),
-    }),
-    unset: 'destroy',
-  }),
-);
 
 // Prevent browser's back button feature such as after logout,
 // the user should not be taken to the login screen after pressing the browser's back button
@@ -95,7 +46,7 @@ app.use((req, res) => {
 // error handler
 app.use((err, req, res, next) => {
   // set locals, only providing error in development
-  console.log(err);
+  logger.info(err);
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
