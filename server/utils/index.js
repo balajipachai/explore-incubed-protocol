@@ -140,6 +140,7 @@ async function sendTransaction(network, tx) {
   });
   const accountAddress = addressFromPrivateKey(pk);
   const nonce = await provider.eth.getTransactionCount(accountAddress);
+  transaction.sender = accountAddress;
   transaction.nonce = nonce;
   transaction.gasPrice = '0x77359400'; // 2 Gwei
   transaction.gas = '0x2dc6c0'; // 3000000
