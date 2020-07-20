@@ -41,8 +41,6 @@ async function nodeRegistryLogicRegisterNode(params) {
   const {
     privateKey, network, to, minimumDeposit: amount,
   } = params;
-  // THESE BELOW CALLS NEED IMPROVEMENTS, HERE WE CAN USE QUEUE IMPLEMENTATION
-  // FOR MAKING CALLS TO THE BLOCKCHAIN NETWORK
   await supportedTokenDeposit(params);
   await supportedTokenApproval({
     privateKey,
