@@ -1,13 +1,9 @@
 const { Kafka } = require('kafkajs');
+const jsonFormat = require('json-format');
 
-const { json } = require('express');
-const { sendTransaction } = require('../utils/bitcoin');
-const { getTopics } = require('./admin');
+const { sendTransaction } = require('../../utils/');
+const logger = require('../../config/winston');
 
-
-const blockchains = {
-  bitcoin: sendTransaction,
-};
 const kafka = new Kafka({
   clientId: 'blockchain-queue',
   brokers: ['localhost:9092'],
@@ -18,13 +14,14 @@ const consumer = kafka.consumer({ groupId: 'blockchain' });
 
 const run = async () => {
   await consumer.connect();
-  await getTopics.forEach(async (topic) => {
-    await consumer.subscribe({ topic, fromBeginning: true });
-  });
+  await consumer.subscribe({ topic: 'GOERLI', fromBeginning: true });
+  await consumer.subscribe({ topic: 'KOVAN', fromBeginning: true });
   await consumer.run({
     eachMessage: async ({ topic, partition, message }) => {
-      const result = await blockchains[topic](json.parse(message.value));
-
+      const transaction = jsonFormat(JSON.parse(message.value));
+      const receipt = await sendTransaction(topic, transaction);
+      logger.info('Receipt is: ', receipt);
+      return receipt;
       // Here there should be a socket call
     },
   });
@@ -33,3 +30,5 @@ const run = async () => {
 module.exports = {
   run,
 };
+
+run();
