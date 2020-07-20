@@ -1,4 +1,5 @@
 const { Kafka } = require('kafkajs');
+const logger = require('../../config/winston');
 
 const kafka = new Kafka({
   clientId: 'blockchain-queue',
@@ -42,6 +43,21 @@ const getTopics = async () => {
   const existingTopicNames = topicsMetaData.topics.map((topic) => topic.name);
   return existingTopicNames;
 };
+
+const init = async () => {
+  const existingTopics = await getTopics();
+  if (existingTopics.findIndex('GOERLI') !== -1 && existingTopics.findIndex('KOVAN') !== -1) {
+    console.log('Topics already exists');
+    return true;
+  }
+  await createTopic('KOVAN');
+  await createTopic('GOERLI');
+  return true;
+};
+
+init().then(() => {
+  logger.info('Topics created successfully');
+});
 
 module.exports = {
   createTopic,
