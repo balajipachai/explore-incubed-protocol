@@ -118,6 +118,9 @@ The tests for the contracts are developed using mocha and chai and openzeppelin-
 
 5. Point 2. is also applicable to `unregisteringNode()` `signerRequire`
 
+6. THE Transaction Object in case if it's not provided the value for `gas` then the `in3-wasm` library fails at in3-wasm/index.js Line No: 1511 which is `tx.gas = util.toMinHex(args.gas || (api && (toNumber(await api.estimateGas(tx)) + 1000) || 3000000))`.
+Thus the doc should be updated with transaction object to contain `gas` field as compulsory.
+
 
 ### TEST CASES THAT ARE FAILING
 
