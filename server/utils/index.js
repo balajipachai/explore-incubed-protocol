@@ -5,7 +5,6 @@ const NodeRegistryLogicJSON = require('../build/contracts/NodeRegistryLogic');
 const BlockhashRegistryJSON = require('../build/contracts/BlockhashRegistry');
 const NodeRegistryDataJSON = require('../build/contracts/NodeRegistryData');
 const WETH9JSON = require('../build/contracts/WETH9');
-const logger = require('../config/winston');
 
 let in3;
 
@@ -15,7 +14,6 @@ let in3;
  */
 function getIn3Provider(network) {
   const chainId = `IN3_${network}_CHAIN_ID`;
-  console.log('chainId: ', chainId);
   in3 = new in3wasm.IN3({
     proof: process.env.IN3_PROOF,
     signatureCount: parseInt(process.env.IN3_SIGNATURE_COUNT, 10),
@@ -36,7 +34,6 @@ function getIn3Provider(network) {
  */
 function getContractInstance(contractName, network) {
   let deployedOn = '';
-  console.log('Deployed: ', network, contractName);
   switch (contractName) {
     case 'NodeRegistryLogic':
       deployedOn = `NODEREGISTRY_LOGIC_DEPLOYED_ADDRESS_${network}`;
@@ -79,7 +76,6 @@ function getMethod(methodName, inputs) {
       method += `${input.type})`;
     }
   });
-  console.log('Method in getMethod: ', method);
   return method;
 }
 
@@ -116,6 +112,39 @@ function addressFromPrivateKey(privateKey) {
   );
 }
 
+function getChainId(network) {
+  switch (network) {
+    case 'MAINNET': return 0x1;
+    case 'KOVAN': return 0x2a;
+    case 'EVAN': return 0x4b1;
+    case 'GOERLI': return 0x5;
+    case 'IPFS': return 0x7d0;
+    default:
+      throw new Error('No case matched in getChainId');
+  }
+}
+
+async function sendTransaction(network, tx) {
+  const transaction = JSON.parse(tx);
+  const { pk } = transaction;
+  const chainId = getChainId(network);
+  const provider = new in3wasm.IN3({
+    proof: 'standard',
+    signatureCount: 1,
+    requestCount: 1,
+    chainId,
+    replaceLatestBlock: 10,
+    maxAttempts: 10,
+    key: pk,
+    timeout: 1200000,
+  });
+  const accountAddress = addressFromPrivateKey(pk);
+  const nonce = await provider.eth.getTransactionCount(accountAddress);
+  transaction.nonce = nonce;
+  const receipt = await provider.eth.sendTransaction(transaction);
+  return getResponseFromTransactionReceipt(receipt);
+}
+
 module.exports = {
   getIn3Provider,
   getContractInstance,
@@ -123,4 +152,5 @@ module.exports = {
   getMethod,
   getResponseFromTransactionReceipt,
   addressFromPrivateKey,
+  sendTransaction,
 };
