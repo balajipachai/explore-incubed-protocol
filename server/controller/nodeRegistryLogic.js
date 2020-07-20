@@ -1,6 +1,7 @@
 const Promise = require('bluebird');
 const BigNumber = require('bignumber.js');
 const utils = require('../utils/');
+const producer = require('./queue/producer');
 
 /**
  * Function to activate the new NodeRegistryLogic contract
@@ -12,19 +13,19 @@ async function activateNewLogicContract(params) {
   const nodeRegLogicConInstance = utils.getContractInstance(
     process.env.NODEREGISTRYLOGIC_CONTRACT_NAME, network,
   );
-  const accountAddress = utils.addressFromPrivateKey(privateKey);
-  const nonce = await in3.eth.getTransactionCount(accountAddress);
-  const receipt = await in3.eth.sendTransaction({
-    // eslint-disable-next-line no-underscore-dangle
-    to: nodeRegLogicConInstance._address,
-    method: 'activateNewLogic()',
-    args: [],
-    confirmations: 2,
-    nonce,
-    pk: privateKey,
-  });
-  return utils.getResponseFromTransactionReceipt(receipt);
-
+  producer.sendMessage(
+    network,
+    {
+      // eslint-disable-next-line no-underscore-dangle
+      to: nodeRegLogicConInstance._address,
+      method: 'activateNewLogic()',
+      args: [],
+      confirmations: 2,
+      pk: privateKey,
+      network,
+    },
+  );
+  return 'Transaction submitted to the blockchain';
 }
 
 /**
@@ -41,17 +42,18 @@ async function adminUpdateLogic(params) {
   // eslint-disable-next-line prefer-destructuring
   const { inputs } = functionABI[0];
   const method = utils.getMethod('adminUpdateLogic', inputs);
-  const accountAddress = utils.addressFromPrivateKey(process.env.IN3_SIGNING_KEY);
-  const nonce = await in3.eth.getTransactionCount(accountAddress);
-  const receipt = await in3.eth.sendTransaction({
-    // eslint-disable-next-line no-underscore-dangle
-    to: nodeRegLogicConInstance._address,
-    method,
-    args: [newLogic],
-    confirmations: 2,
-    nonce,
-  });
-  return utils.getResponseFromTransactionReceipt(receipt);
+  producer.sendMessage(
+    network,
+    {
+      // eslint-disable-next-line no-underscore-dangle
+      to: nodeRegLogicConInstance._address,
+      method,
+      args: [newLogic],
+      confirmations: 2,
+      pk: process.env.IN3_SIGNING_KEY,
+    },
+  );
+  return 'Transaction submitted to the blockchain';
 }
 
 /**
@@ -68,17 +70,18 @@ async function adminRemoveNodeFromRegistry(params) {
   // eslint-disable-next-line prefer-destructuring
   const { inputs } = functionABI[0];
   const method = utils.getMethod('adminRemoveNodeFromRegistry', inputs);
-  const accountAddress = utils.addressFromPrivateKey(process.env.IN3_SIGNING_KEY);
-  const nonce = await in3.eth.getTransactionCount(accountAddress);
-  const receipt = await in3.eth.sendTransaction({
-    // eslint-disable-next-line no-underscore-dangle
-    to: nodeRegLogicConInstance._address,
-    method,
-    args: [signer],
-    confirmations: 2,
-    nonce,
-  });
-  return utils.getResponseFromTransactionReceipt(receipt);
+  producer.sendMessage(
+    network,
+    {
+      // eslint-disable-next-line no-underscore-dangle
+      to: nodeRegLogicConInstance._address,
+      method,
+      args: [signer],
+      confirmations: 2,
+      pk: process.env.IN3_SIGNING_KEY,
+    },
+  );
+  return 'Transaction submitted to the blockchain';
 }
 
 /**
@@ -141,20 +144,20 @@ async function registerNode(params) {
   // eslint-disable-next-line prefer-destructuring
   const { inputs } = functionABI[0];
   const method = utils.getMethod('registerNode', inputs);
-  const accountAddress = utils.addressFromPrivateKey(privateKey);
-  const nonce = await in3.eth.getTransactionCount(accountAddress);
-  const receipt = await in3.eth.sendTransaction({
-    // eslint-disable-next-line no-underscore-dangle
-    to: nodeRegLogicConInstance._address,
-    method,
-    args: [url, props, weight, minimumDeposit],
-    confirmations: 2,
-    nonce,
-    pk: privateKey,
-  });
+  producer.sendMessage(
+    network,
+    {
+      // eslint-disable-next-line no-underscore-dangle
+      to: nodeRegLogicConInstance._address,
+      method,
+      args: [url, props, weight, minimumDeposit],
+      confirmations: 2,
+      pk: privateKey,
+    },
+  );
   // Set the Private Key again to IN3_SIGNING_KEY
   in3.config.key = process.env.IN3_SIGNING_KEY;
-  return utils.getResponseFromTransactionReceipt(receipt);
+  return 'Transaction submitted to the blockchain';
 }
 
 /**
@@ -173,20 +176,20 @@ async function returnDeposits(params) {
   // eslint-disable-next-line prefer-destructuring
   const { inputs } = functionABI[0];
   const method = utils.getMethod('returnDeposit', inputs);
-  const accountAddress = utils.addressFromPrivateKey(ownerPrivateKey);
-  const nonce = await in3.eth.getTransactionCount(accountAddress);
-  const receipt = await in3.eth.sendTransaction({
-    // eslint-disable-next-line no-underscore-dangle
-    to: nodeRegLogicConInstance._address,
-    method,
-    args: [signer],
-    confirmations: 2,
-    nonce,
-    pk: ownerPrivateKey,
-  });
+  producer.sendMessage(
+    network,
+    {
+      // eslint-disable-next-line no-underscore-dangle
+      to: nodeRegLogicConInstance._address,
+      method,
+      args: [signer],
+      confirmations: 2,
+      pk: ownerPrivateKey,
+    },
+  );
   // Set the Private Key again to IN3_SIGNING_KEY
   in3.config.key = process.env.IN3_SIGNING_KEY;
-  return utils.getResponseFromTransactionReceipt(receipt);
+  return 'Transaction submitted to the blockchain';
 }
 
 /**
@@ -205,20 +208,20 @@ async function transferIN3NodeOwnership(params) {
   // eslint-disable-next-line prefer-destructuring
   const { inputs } = functionABI[0];
   const method = utils.getMethod('transferOwnership', inputs);
-  const accountAddress = utils.addressFromPrivateKey(ownerPrivateKey);
-  const nonce = await in3.eth.getTransactionCount(accountAddress);
-  const receipt = await in3.eth.sendTransaction({
-    // eslint-disable-next-line no-underscore-dangle
-    to: nodeRegLogicConInstance._address,
-    method,
-    args: [signer, newOwner],
-    confirmations: 2,
-    nonce,
-    pk: ownerPrivateKey,
-  });
+  producer.sendMessage(
+    network,
+    {
+      // eslint-disable-next-line no-underscore-dangle
+      to: nodeRegLogicConInstance._address,
+      method,
+      args: [signer, newOwner],
+      confirmations: 2,
+      pk: ownerPrivateKey,
+    },
+  );
   // Set the Private Key again to IN3_SIGNING_KEY
   in3.config.key = process.env.IN3_SIGNING_KEY;
-  return utils.getResponseFromTransactionReceipt(receipt);
+  return 'Transaction submitted to the blockchain';
 }
 
 /**
@@ -237,20 +240,20 @@ async function unregisterIN3Node(params) {
   // eslint-disable-next-line prefer-destructuring
   const { inputs } = functionABI[0];
   const method = utils.getMethod('unregisteringNode', inputs);
-  const accountAddress = utils.addressFromPrivateKey(ownerPrivateKey);
-  const nonce = await in3.eth.getTransactionCount(accountAddress);
-  const receipt = await in3.eth.sendTransaction({
-    // eslint-disable-next-line no-underscore-dangle
-    to: nodeRegLogicConInstance._address,
-    method,
-    args: [signer],
-    confirmations: 2,
-    nonce,
-    pk: ownerPrivateKey,
-  });
+  producer.sendMessage(
+    network,
+    {
+      // eslint-disable-next-line no-underscore-dangle
+      to: nodeRegLogicConInstance._address,
+      method,
+      args: [signer],
+      confirmations: 2,
+      pk: ownerPrivateKey,
+    },
+  );
   // Set the Private Key again to IN3_SIGNING_KEY
   in3.config.key = process.env.IN3_SIGNING_KEY;
-  return utils.getResponseFromTransactionReceipt(receipt);
+  return 'Transaction submitted to the blockchain';
 }
 
 /**
@@ -269,20 +272,20 @@ async function updateIN3Node(params) {
   // eslint-disable-next-line prefer-destructuring
   const { inputs } = functionABI[0];
   const method = utils.getMethod('updateNode', inputs);
-  const accountAddress = utils.addressFromPrivateKey(ownerPrivateKey);
-  const nonce = await in3.eth.getTransactionCount(accountAddress);
-  const receipt = await in3.eth.sendTransaction({
-    // eslint-disable-next-line no-underscore-dangle
-    to: nodeRegLogicConInstance._address,
-    method,
-    args: [signer, url, props, weight, additionalDeposit],
-    confirmations: 2,
-    nonce,
-    pk: ownerPrivateKey,
-  });
+  producer.sendMessage(
+    network,
+    {
+      // eslint-disable-next-line no-underscore-dangle
+      to: nodeRegLogicConInstance._address,
+      method,
+      args: [signer, url, props, weight, additionalDeposit],
+      confirmations: 2,
+      pk: ownerPrivateKey,
+    },
+  );
   // Set the Private Key again to IN3_SIGNING_KEY
   in3.config.key = process.env.IN3_SIGNING_KEY;
-  return utils.getResponseFromTransactionReceipt(receipt);
+  return 'Transaction submitted to the blockchain';
 }
 
 module.exports = {

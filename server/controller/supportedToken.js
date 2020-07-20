@@ -1,4 +1,5 @@
 const utils = require('../utils/');
+const producer = require('./queue/producer');
 
 async function depositToken(params) {
   const { privateKey, minimumDeposit, network } = params;
@@ -8,19 +9,23 @@ async function depositToken(params) {
   const value = parseInt(minimumDeposit, 10);
   const accountAddress = utils.addressFromPrivateKey(privateKey);
   const nonce = await in3.eth.getTransactionCount(accountAddress);
-  const receipt = await in3.eth.sendTransaction({
-    // eslint-disable-next-line no-underscore-dangle
-    to: tokenContractinstance._address,
-    method,
-    args: [],
-    confirmations: 2,
-    value,
-    nonce,
-    pk: privateKey,
-  });
+  console.log(4);
+  producer.sendMessage(
+    network,
+    {
+      // eslint-disable-next-line no-underscore-dangle
+      to: tokenContractinstance._address,
+      method,
+      args: [],
+      confirmations: 2,
+      value,
+      nonce,
+      pk: privateKey,
+    },
+  );
   // Set the Private Key again to IN3_SIGNING_KEY
   in3.config.key = process.env.IN3_SIGNING_KEY;
-  return utils.getResponseFromTransactionReceipt(receipt);
+  return 'Transaction submitted to the blockchain';
 }
 
 async function approveToken(params) {
@@ -42,20 +47,20 @@ async function approveToken(params) {
   // eslint-disable-next-line prefer-destructuring
   const { inputs } = functionABI[0];
   const method = utils.getMethod('approve', inputs);
-  const accountAddress = utils.addressFromPrivateKey(privateKey);
-  const nonce = await in3.eth.getTransactionCount(accountAddress);
-  const receipt = await in3.eth.sendTransaction({
-    // eslint-disable-next-line no-underscore-dangle
-    to: tokenContractinstance._address,
-    method,
-    args: [approveTo, amount],
-    confirmations: 2,
-    nonce,
-    pk: privateKey,
-  });
+  producer.sendMessage(
+    network,
+    {
+      // eslint-disable-next-line no-underscore-dangle
+      to: tokenContractinstance._address,
+      method,
+      args: [approveTo, amount],
+      confirmations: 2,
+      pk: privateKey,
+    },
+  );
   // Set the Private Key again to IN3_SIGNING_KEY
   in3.config.key = process.env.IN3_SIGNING_KEY;
-  return utils.getResponseFromTransactionReceipt(receipt);
+  return 'Transaction submitted to the blockchain';
 }
 
 module.exports = {
