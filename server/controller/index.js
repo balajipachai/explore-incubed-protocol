@@ -75,9 +75,7 @@ async function nodeRegistryLogicUpdateIN3Node(params) {
     additionalDeposit, network, ownerPrivateKey,
   } = params;
   if (additionalDeposit > 0) {
-    // THESE BELOW CALLS NEED IMPROVEMENTS, HERE WE CAN USE QUEUE IMPLEMENTATION
-    // FOR MAKING CALLS TO THE BLOCKCHAIN NETWORK
-    await supportedTokenDeposit({
+    const res = await supportedTokenDeposit({
       privateKey: ownerPrivateKey,
       minimumDeposit: additionalDeposit,
       network,
@@ -87,7 +85,10 @@ async function nodeRegistryLogicUpdateIN3Node(params) {
       network,
       to: '',
       amount: additionalDeposit,
+      nonce: res.nonce + 1,
     });
+    // eslint-disable-next-line no-param-reassign
+    params.nonce = res.nonce + 2;
     const receipt = await nodeRegistryLogic.updateIN3Node(params);
     return receipt;
   }
