@@ -1,0 +1,317 @@
+<div class="card-group">
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Admin Update Logic</h5>
+      <p class="card-text">Sets the address for a new (pending) logic smart contract</p>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Contract Address</span>
+        </div>
+        <input type="text" [(ngModel)]="contractAddress" class="form-control" aria-label="Sizing example input"
+          aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Network</span>
+        </div>
+        <input type="text" [(ngModel)]="updateNetwork" placeholder="goerli, kovan, mainnet" class="form-control"
+          aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="text-center" *ngIf="!adminUpdateLogicLoaded">
+        <div class="spinner-border" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary" (click)="adminUpdateLogic()">Update
+        Logic</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Admin Remove Node</h5>
+      <p class="card-text">Removes an in3-server from the node registry. Only admin can perform this operation.</p>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Signer Address</span>
+        </div>
+        <input type="text" [(ngModel)]="signerAddress" class="form-control" aria-label="Sizing example input"
+          aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Network</span>
+        </div>
+        <input type="text" [(ngModel)]="removeNetwork" placeholder="goerli, kovan, mainnet" class="form-control"
+          aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="text-center" *ngIf="!adminRemoveNodeFromRegistryLoaded">
+        <div class="spinner-border" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary" (click)="adminRemoveNodeFromRegistry()">Remove Node</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Register Node</h5>
+      <p class="card-text">Registers an in3-server in the node registry. Anybody can invoke this function.</p>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Private Key</span>
+        </div>
+        <input type="text" [(ngModel)]="privateKey" class="form-control" aria-label="Sizing example input"
+          aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">URL</span>
+        </div>
+        <input type="text" [(ngModel)]="url" class="form-control" aria-label="Sizing example input"
+          aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Properties</span>
+        </div>
+        <input type="text" [(ngModel)]="props" placeholder="Anything from 0 - 65535" class="form-control"
+          aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Weight</span>
+        </div>
+        <input type="text" [(ngModel)]="weight" placeholder="Number of requests per second" class="form-control"
+          aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Deposit</span>
+        </div>
+        <input type="text" [(ngModel)]="minimumDeposit" placeholder="Greater than 1001" class="form-control"
+          aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Network</span>
+        </div>
+        <input type="text" [(ngModel)]="registerNetwork" placeholder="goerli, kovan, mainnet" class="form-control"
+          aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="text-center" *ngIf="!registerNodeInRegistryLoaded">
+        <div class="spinner-border" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary" (click)="registerNodeInRegistry()">Register Node</button>
+    </div>
+  </div>
+</div>
+
+<div class="card-group">
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Activate New Logic</h5>
+      <p class="card-text">Activates the new logic contract. Ensure the update timeout has passed before calling it.</p>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Private Key</span>
+        </div>
+        <input type="text" [(ngModel)]="activateNewLogicPrivateKey" class="form-control"
+          aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Network</span>
+        </div>
+        <input type="text" [(ngModel)]="activateNewLogicNetwork" placeholder="goerli, kovan, mainnet"
+          class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="text-center" *ngIf="!activateNewLogicContractLoaded">
+        <div class="spinner-border" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary" (click)="activateNewLogicContract()">Activate Logic
+        Contract</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Return Deposits</h5>
+      <p class="card-text">Returns the deposits of the owner. Must be called by the IN3-Node owner else it fails.</p>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Signer Address</span>
+        </div>
+        <input type="text" [(ngModel)]="returnDepositsSigner" class="form-control" aria-label="Sizing example input"
+          aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Owner Private Key</span>
+        </div>
+        <input type="text" [(ngModel)]="returnDepositsOwnerPrivateKey" class="form-control"
+          aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Network</span>
+        </div>
+        <input type="text" [(ngModel)]="returnDepositsNetwork" placeholder="goerli, kovan, mainnet" class="form-control"
+          aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="text-center" *ngIf="!returnDepositsLoaded">
+        <div class="spinner-border" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary" (click)="returnDeposits()">Return Deposits</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Transfer IN3 Node Ownership</h5>
+      <p class="card-text">Transfers the IN3 Node Ownership. Must be called by the IN3-Node owner else it fails.</p>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Signer Address</span>
+        </div>
+        <input type="text" [(ngModel)]="transferIN3NodeOwnershipSigner" class="form-control"
+          aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">New Owner Address</span>
+        </div>
+        <input type="text" [(ngModel)]="transferIN3NodeOwnershipNewOwner" class="form-control"
+          aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Owner Private Key</span>
+        </div>
+        <input type="text" [(ngModel)]="transferIN3NodeOwnershipOwnerPrivateKey" class="form-control"
+          aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Network</span>
+        </div>
+        <input type="text" [(ngModel)]="transferIN3NodeOwnershipNetwork" placeholder="goerli, kovan, mainnet"
+          class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="text-center" *ngIf="!transferIN3NodeOwnershipLoaded">
+        <div class="spinner-border" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary" (click)="transferIN3NodeOwnership()">Transfer Ownership</button>
+    </div>
+  </div>
+</div>
+
+<div class="card-group">
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Update Node</h5>
+      <p class="card-text">Updates an in3-server in the node registry. Only owner of IN3 node invocation will update the
+        node.</p>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Signer Address</span>
+        </div>
+        <input type="text" [(ngModel)]="updateIN3NodeSigner" class="form-control" aria-label="Sizing example input"
+          aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">URL</span>
+        </div>
+        <input type="text" [(ngModel)]="updateIN3NodeURL" class="form-control" aria-label="Sizing example input"
+          aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Properties</span>
+        </div>
+        <input type="text" [(ngModel)]="updateIN3NodeProps" placeholder="Anything from 0 - 65535" class="form-control"
+          aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Weight</span>
+        </div>
+        <input type="text" [(ngModel)]="updateIN3NodeWeight" placeholder="Number of requests per second"
+          class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Deposit</span>
+        </div>
+        <input type="text" [(ngModel)]="updateIN3NodeAdditionalDeposit" placeholder="Can be 0 or more"
+          class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Network</span>
+        </div>
+        <input type="text" [(ngModel)]="updateIN3NodeNetwork" placeholder="goerli, kovan, mainnet" class="form-control"
+          aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Owner Private Key</span>
+        </div>
+        <input type="text" [(ngModel)]="updateIN3NodeOwnerPrivateKey" class="form-control"
+          aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="text-center" *ngIf="!updateIN3NodeLoaded">
+        <div class="spinner-border" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary" (click)="updateIN3Node()">Update Node</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Unregister Node</h5>
+      <p class="card-text">Unregisters a node from the registry. Must be called by the IN3-Node owner else it fails.</p>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Signer Address</span>
+        </div>
+        <input type="text" [(ngModel)]="unregisterIN3NodeSigner" class="form-control" aria-label="Sizing example input"
+          aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Owner Private Key</span>
+        </div>
+        <input type="text" [(ngModel)]="unregisterIN3NodeOwnerPrivateKey" class="form-control"
+          aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="input-group input-group-sm mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Network</span>
+        </div>
+        <input type="text" [(ngModel)]="unregisterIN3NodeNetwork" placeholder="goerli, kovan, mainnet"
+          class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+      </div>
+      <div class="text-center" *ngIf="!unregisterIN3NodeLoaded">
+        <div class="spinner-border" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary" (click)="unregisterIN3Node()">Unregister Node</button>
+    </div>
+  </div>
+</div>
+
+<div class="alert alert-primary" role="alert" *ngIf="success">
+  Transaction submitted to Blockchain
+</div>
+<div class="alert alert-danger" role="alert" *ngIf="failure">
+  Failure in submitting Transaction!
+</div>
