@@ -41,13 +41,16 @@ async function nodeRegistryLogicRegisterNode(params) {
   const {
     privateKey, network, to, minimumDeposit: amount,
   } = params;
-  await supportedTokenDeposit(params);
+  const res = await supportedTokenDeposit(params);
   await supportedTokenApproval({
     privateKey,
     network,
     to,
     amount,
+    nonce: res.nonce + 1,
   });
+  // eslint-disable-next-line no-param-reassign
+  params.nonce = res.nonce + 2;
   const receipt = await nodeRegistryLogic.registerNode(params);
   return receipt;
 }
@@ -91,8 +94,6 @@ async function nodeRegistryLogicUpdateIN3Node(params) {
   const receipt = await nodeRegistryLogic.updateIN3Node(params);
   return receipt;
 }
-
-
 
 module.exports = {
   getNodeRegistryLogicPublicVariables,

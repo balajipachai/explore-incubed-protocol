@@ -9,9 +9,7 @@ async function depositToken(params) {
   const value = parseInt(minimumDeposit, 10);
   const accountAddress = utils.addressFromPrivateKey(privateKey);
   const nonce = await in3.eth.getTransactionCount(accountAddress);
-  console.log(4);
   producer.sendMessage(
-    network,
     {
       // eslint-disable-next-line no-underscore-dangle
       to: tokenContractinstance._address,
@@ -25,12 +23,15 @@ async function depositToken(params) {
   );
   // Set the Private Key again to IN3_SIGNING_KEY
   in3.config.key = process.env.IN3_SIGNING_KEY;
-  return 'Transaction submitted to the blockchain';
+  return {
+    msg: 'Transaction submitted to the blockchain',
+    nonce,
+  };
 }
 
 async function approveToken(params) {
   const {
-    privateKey, network, to, amount,
+    privateKey, network, to, amount, nonce,
   } = params;
   let approveTo = to;
   const in3 = utils.getIn3Provider(network); // This sets the web3 object
@@ -47,17 +48,15 @@ async function approveToken(params) {
   // eslint-disable-next-line prefer-destructuring
   const { inputs } = functionABI[0];
   const method = utils.getMethod('approve', inputs);
-  producer.sendMessage(
-    network,
-    {
-      // eslint-disable-next-line no-underscore-dangle
-      to: tokenContractinstance._address,
-      method,
-      args: [approveTo, amount],
-      confirmations: 2,
-      pk: privateKey,
-    },
-  );
+  producer.sendMessage({
+    // eslint-disable-next-line no-underscore-dangle
+    to: tokenContractinstance._address,
+    method,
+    args: [approveTo, amount],
+    confirmations: 2,
+    nonce,
+    pk: privateKey,
+  });
   // Set the Private Key again to IN3_SIGNING_KEY
   in3.config.key = process.env.IN3_SIGNING_KEY;
   return 'Transaction submitted to the blockchain';

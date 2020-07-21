@@ -13,19 +13,17 @@ async function activateNewLogicContract(params) {
   const nodeRegLogicConInstance = utils.getContractInstance(
     process.env.NODEREGISTRYLOGIC_CONTRACT_NAME, network,
   );
-  producer.sendMessage(
+  const message = await producer.sendMessage({
+    // eslint-disable-next-line no-underscore-dangle
+    to: nodeRegLogicConInstance._address,
+    method: 'activateNewLogic()',
+    args: [],
+    confirmations: 2,
+    pk: privateKey,
     network,
-    {
-      // eslint-disable-next-line no-underscore-dangle
-      to: nodeRegLogicConInstance._address,
-      method: 'activateNewLogic()',
-      args: [],
-      confirmations: 2,
-      pk: privateKey,
-      network,
-    },
-  );
-  return 'Transaction submitted to the blockchain';
+  });
+  console.log('Producer message: ', message);
+  return message;
 }
 
 /**
@@ -42,18 +40,16 @@ async function adminUpdateLogic(params) {
   // eslint-disable-next-line prefer-destructuring
   const { inputs } = functionABI[0];
   const method = utils.getMethod('adminUpdateLogic', inputs);
-  producer.sendMessage(
-    network,
-    {
-      // eslint-disable-next-line no-underscore-dangle
-      to: nodeRegLogicConInstance._address,
-      method,
-      args: [newLogic],
-      confirmations: 2,
-      pk: process.env.IN3_SIGNING_KEY,
-    },
-  );
-  return 'Transaction submitted to the blockchain';
+  const message = await producer.sendMessage({
+    // eslint-disable-next-line no-underscore-dangle
+    to: nodeRegLogicConInstance._address,
+    method,
+    args: [newLogic],
+    confirmations: 2,
+    pk: process.env.IN3_SIGNING_KEY,
+  });
+  console.log('Producer message: ', message);
+  return message;
 }
 
 /**
@@ -70,18 +66,16 @@ async function adminRemoveNodeFromRegistry(params) {
   // eslint-disable-next-line prefer-destructuring
   const { inputs } = functionABI[0];
   const method = utils.getMethod('adminRemoveNodeFromRegistry', inputs);
-  producer.sendMessage(
-    network,
-    {
-      // eslint-disable-next-line no-underscore-dangle
-      to: nodeRegLogicConInstance._address,
-      method,
-      args: [signer],
-      confirmations: 2,
-      pk: process.env.IN3_SIGNING_KEY,
-    },
-  );
-  return 'Transaction submitted to the blockchain';
+  const message = await producer.sendMessage({
+    // eslint-disable-next-line no-underscore-dangle
+    to: nodeRegLogicConInstance._address,
+    method,
+    args: [signer],
+    confirmations: 2,
+    pk: process.env.IN3_SIGNING_KEY,
+  });
+  console.log('Producer message: ', message);
+  return message;
 }
 
 /**
@@ -134,7 +128,7 @@ async function getPublicVariables(params) {
  */
 async function registerNode(params) {
   const {
-    url, props, weight, minimumDeposit, network, privateKey,
+    url, props, weight, minimumDeposit, network, privateKey, nonce,
   } = params;
   const in3 = utils.getIn3Provider(network); // This sets the web3 object
   const nodeRegLogicConInstance = utils.getContractInstance(
@@ -144,17 +138,15 @@ async function registerNode(params) {
   // eslint-disable-next-line prefer-destructuring
   const { inputs } = functionABI[0];
   const method = utils.getMethod('registerNode', inputs);
-  producer.sendMessage(
-    network,
-    {
-      // eslint-disable-next-line no-underscore-dangle
-      to: nodeRegLogicConInstance._address,
-      method,
-      args: [url, props, weight, minimumDeposit],
-      confirmations: 2,
-      pk: privateKey,
-    },
-  );
+  producer.sendMessage({
+    // eslint-disable-next-line no-underscore-dangle
+    to: nodeRegLogicConInstance._address,
+    method,
+    args: [url, props, weight, minimumDeposit],
+    confirmations: 2,
+    nonce,
+    pk: privateKey,
+  });
   // Set the Private Key again to IN3_SIGNING_KEY
   in3.config.key = process.env.IN3_SIGNING_KEY;
   return 'Transaction submitted to the blockchain';
@@ -176,20 +168,18 @@ async function returnDeposits(params) {
   // eslint-disable-next-line prefer-destructuring
   const { inputs } = functionABI[0];
   const method = utils.getMethod('returnDeposit', inputs);
-  producer.sendMessage(
-    network,
-    {
-      // eslint-disable-next-line no-underscore-dangle
-      to: nodeRegLogicConInstance._address,
-      method,
-      args: [signer],
-      confirmations: 2,
-      pk: ownerPrivateKey,
-    },
-  );
+  const message = await producer.sendMessage({
+    // eslint-disable-next-line no-underscore-dangle
+    to: nodeRegLogicConInstance._address,
+    method,
+    args: [signer],
+    confirmations: 2,
+    pk: ownerPrivateKey,
+  });
   // Set the Private Key again to IN3_SIGNING_KEY
   in3.config.key = process.env.IN3_SIGNING_KEY;
-  return 'Transaction submitted to the blockchain';
+  console.log('Producer message: ', message);
+  return message;
 }
 
 /**
@@ -208,20 +198,18 @@ async function transferIN3NodeOwnership(params) {
   // eslint-disable-next-line prefer-destructuring
   const { inputs } = functionABI[0];
   const method = utils.getMethod('transferOwnership', inputs);
-  producer.sendMessage(
-    network,
-    {
-      // eslint-disable-next-line no-underscore-dangle
-      to: nodeRegLogicConInstance._address,
-      method,
-      args: [signer, newOwner],
-      confirmations: 2,
-      pk: ownerPrivateKey,
-    },
-  );
+  const message = await producer.sendMessage({
+    // eslint-disable-next-line no-underscore-dangle
+    to: nodeRegLogicConInstance._address,
+    method,
+    args: [signer, newOwner],
+    confirmations: 2,
+    pk: ownerPrivateKey,
+  });
   // Set the Private Key again to IN3_SIGNING_KEY
   in3.config.key = process.env.IN3_SIGNING_KEY;
-  return 'Transaction submitted to the blockchain';
+  console.log('Producer message: ', message);
+  return message;
 }
 
 /**
@@ -240,20 +228,18 @@ async function unregisterIN3Node(params) {
   // eslint-disable-next-line prefer-destructuring
   const { inputs } = functionABI[0];
   const method = utils.getMethod('unregisteringNode', inputs);
-  producer.sendMessage(
-    network,
-    {
-      // eslint-disable-next-line no-underscore-dangle
-      to: nodeRegLogicConInstance._address,
-      method,
-      args: [signer],
-      confirmations: 2,
-      pk: ownerPrivateKey,
-    },
-  );
+  const message = await producer.sendMessage({
+    // eslint-disable-next-line no-underscore-dangle
+    to: nodeRegLogicConInstance._address,
+    method,
+    args: [signer],
+    confirmations: 2,
+    pk: ownerPrivateKey,
+  });
   // Set the Private Key again to IN3_SIGNING_KEY
   in3.config.key = process.env.IN3_SIGNING_KEY;
-  return 'Transaction submitted to the blockchain';
+  console.log('Producer message: ', message);
+  return message;
 }
 
 /**
@@ -272,20 +258,18 @@ async function updateIN3Node(params) {
   // eslint-disable-next-line prefer-destructuring
   const { inputs } = functionABI[0];
   const method = utils.getMethod('updateNode', inputs);
-  producer.sendMessage(
-    network,
-    {
-      // eslint-disable-next-line no-underscore-dangle
-      to: nodeRegLogicConInstance._address,
-      method,
-      args: [signer, url, props, weight, additionalDeposit],
-      confirmations: 2,
-      pk: ownerPrivateKey,
-    },
-  );
+  const message = await producer.sendMessage({
+    // eslint-disable-next-line no-underscore-dangle
+    to: nodeRegLogicConInstance._address,
+    method,
+    args: [signer, url, props, weight, additionalDeposit],
+    confirmations: 2,
+    pk: ownerPrivateKey,
+  });
   // Set the Private Key again to IN3_SIGNING_KEY
   in3.config.key = process.env.IN3_SIGNING_KEY;
-  return 'Transaction submitted to the blockchain';
+  console.log('Producer message: ', message);
+  return message;
 }
 
 module.exports = {
