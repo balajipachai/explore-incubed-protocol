@@ -1,26 +1,31 @@
-const { Kafka } = require('kafkajs');
+const amqp = require('amqplib/callback_api');
 
-const kafka = new Kafka({
-  clientId: 'blockchain-queue',
-  brokers: ['localhost:9092'],
-});
+const sendMessage = async (params) => {
+  amqp.connect('amqp://localhost', (error0, connection) => {
+    if (error0) {
+      throw error0;
+    }
+    connection.createChannel((error1, channel) => {
+      if (error1) {
+        throw error1;
+      }
+      const queue = 'task_queue';
 
-const producer = kafka.producer();
-
-const sendMessage = async (topic, params) => {
-  await producer.connect();
-  await producer.send({
-    topic,
-    messages: [
-      { value: JSON.stringify(params) },
-    ],
+      channel.assertQueue(queue, {
+        durable: true,
+      });
+      channel.sendToQueue(queue, Buffer.from(JSON.stringify(params)), {
+        persistent: true,
+      });
+      console.log('Sent \n', params);
+    });
   });
-  await producer.disconnect();
-  return {
-    message: 'Message sent successfully',
-  };
 };
 
 module.exports = {
   sendMessage,
 };
+
+// sendMessage({
+//   test: 'done',
+// });

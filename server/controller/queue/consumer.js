@@ -1,29 +1,31 @@
-const { Kafka } = require('kafkajs');
 const jsonFormat = require('json-format');
+const amqp = require('amqplib/callback_api');
 
 const { sendTransaction } = require('../../utils/');
 const logger = require('../../config/winston');
 
-const kafka = new Kafka({
-  clientId: 'blockchain-queue',
-  brokers: ['localhost:9092'],
-});
-
-
-const consumer = kafka.consumer({ groupId: 'blockchain' });
 
 const run = async () => {
-  await consumer.connect();
-  await consumer.subscribe({ topic: 'GOERLI', fromBeginning: true });
-  await consumer.subscribe({ topic: 'KOVAN', fromBeginning: true });
-  await consumer.run({
-    eachMessage: async ({ topic, partition, message }) => {
-      const transaction = jsonFormat(JSON.parse(message.value));
-      const receipt = await sendTransaction(topic, transaction);
-      logger.info('Receipt is: ', receipt);
-      return receipt;
-      // Here there should be a socket call
-    },
+  amqp.connect('amqp://localhost', (error, connection) => {
+    connection.createChannel((err, channel) => {
+      if (err) {
+        throw err;
+      }
+      const queue = 'task_queue';
+      channel.assertQueue(queue, {
+        durable: true,
+      });
+      channel.prefetch(1);
+      channel.consume(queue, async (msg) => {
+        console.log('Received message: ', msg.content.toString());
+        const transaction = jsonFormat(JSON.parse(msg.content.toString()));
+        const receipt = await sendTransaction('GOERLI', transaction);
+        logger.info(`Transaction processed: ${JSON.stringify(receipt)}`);
+        console.log('Transaction processed: ', JSON.stringify(receipt));
+      }, {
+        noAck: true,
+      });
+    });
   });
 };
 
