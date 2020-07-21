@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const winston = require('./config/winston');
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'client/dist/incubed-frontend')));
+app.use(cors());
 
 // Prevent browser's back button feature such as after logout,
 // the user should not be taken to the login screen after pressing the browser's back button
