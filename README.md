@@ -206,3 +206,28 @@ function verify(
 
 Again called it as I did in the above case however, this time passed url, props, weight, etc the required params, and it reverted in this case.
 ```
+***
+
+# For Setting up Clien & Server, and proceeding with testing
+
+### Clone the repository
+
+git clone https://github.com/balajipachai/explore-incubed-protocol.git
+
+## Client
+
+1. cd client
+2. npm install
+3. npm run start (Will Launch the server on port 4200)
+
+## Server
+
+1. Ensure RabbitMQ is installed [Install RabbitMQ](https://www.rabbitmq.com/install-debian.html)
+   As `rabbitmq` is used for submitting transactions to the blockchain network and ensuring all transactions are submitted to the network and are mined.
+
+2. cd server
+3. npm install
+4. npm run dev:server OR
+5. npm run start
+
+***
