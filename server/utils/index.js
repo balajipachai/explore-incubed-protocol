@@ -126,6 +126,9 @@ function getChainId(network) {
 
 async function sendTransaction(network, tx) {
   const transaction = JSON.parse(tx);
+  let accountAddress;
+  let nonce;
+  console.log('Transaction details: ', transaction);
   const { pk } = transaction;
   const chainId = getChainId(network);
   const provider = new in3wasm.IN3({
@@ -138,8 +141,14 @@ async function sendTransaction(network, tx) {
     key: pk,
     timeout: 1200000,
   });
-  const accountAddress = addressFromPrivateKey(pk);
-  const nonce = await provider.eth.getTransactionCount(accountAddress);
+  if (Object.prototype.hasOwnProperty.call(transaction, 'nonce')) {
+    // eslint-disable-next-line prefer-destructuring
+    nonce = transaction.nonce;
+  } else {
+    accountAddress = addressFromPrivateKey(pk);
+    nonce = await provider.eth.getTransactionCount(accountAddress);
+  }
+
   transaction.sender = accountAddress;
   transaction.nonce = nonce;
   transaction.gasPrice = '0x77359400'; // 2 Gwei
