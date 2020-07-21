@@ -42,6 +42,7 @@ It all starts with the NodeRegistryLogic contract as it imports NodeRegistryData
   4. Expose the smart contract functionalities via APIs
   5. Use the INCUBED implementation in Typescript to interact with the smart contract
   6. Develop a bare minimum UI to display the smart contract functionalities like nodeList, deposit of a node, etc
+  7. Test coverage reports are in server/coverage directory
 
 ***
 
@@ -206,6 +207,25 @@ function verify(
 
 Again called it as I did in the above case however, this time passed url, props, weight, etc the required params, and it reverted in this case.
 ```
+***
+
+### APIs Developed
+
+1. [AdminUpdateLogic](http://localhost:3000/noderegistrylogic/admin/update/logic)
+2. [AdminRemoveNodeFromRegistry](http://localhost:3000/noderegistrylogic/admin/remove/node)
+3. [RegisterNode](http://localhost:3000/noderegistrylogic/register/node)
+4. [ActivateNewLogic](http://localhost:3000/noderegistrylogic/activate/new/logic/contract)
+5. [ReturnDeposits](http://localhost:3000/noderegistrylogic/return/deposits)
+6. [TransferNodeOwnership](http://localhost:3000/noderegistrylogic/transfer/ownership)
+7. [UpdateIN3Node](http://localhost:3000/noderegistrylogic/update/node)
+8. [UnregisterIN3Node](http://localhost:3000/noderegistrylogic/unregister/node)
+9. DepositToken
+10. ApproveToken 
+
+For APIs 9 & 10, there was no need of explicit endpoints as they are used internally when registering node, updating node etc.
+
+#### The key point is of performing a read request via IN3 Node and then a write request via IN3 node, and all these APIs revolve around those two, for instance in case of GET APIs (Read from Blockchain) we use in3.eth.callFn() & in case of POST APIs (Write To Blockchain) we use in3.eth.sendTransaction()
+
 ***
 
 # For Setting up Clien & Server, and proceeding with testing
