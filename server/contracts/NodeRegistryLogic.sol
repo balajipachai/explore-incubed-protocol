@@ -173,8 +173,8 @@ contract NodeRegistryLogic {
     }
 
     /// @notice sets the address for a new (pending) logic
-    ///         the update can only be applied after 47 days,
-    ///         giving all the nodes enough time to unregister their node if they dislike the update
+    /// the update can only be applied after 47 days,
+    /// giving all the nodes enough time to unregister their node if they dislike the update
     /// @dev only callable by the owner of the contract
     /// @param _newLogic the address of the new logic contract
     function adminUpdateLogic(address _newLogic) external onlyAdmin {
