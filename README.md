@@ -63,7 +63,7 @@ It also has the smart contracts, which were taken from Etherscan, the tests for 
 3. Deployed NodeRegistryLogic() with parameters:
   - address(BlockhashRegistry)
   - address(NodeRegistryData)
-  - minDeposit = 1e16
+  - minDeposit = 1000
 
   However, in `NodeRegistryData`, the `ownerContract` field should be equal to `NodeRegistryLogicContract` and `supportedToken` 
   should be equal to the ERC20 token through which deposits will be made.
@@ -120,6 +120,12 @@ The tests for the contracts are developed using mocha and chai and openzeppelin-
 
 6. THE Transaction Object in case if it's not provided the value for `gas` then the `in3-wasm` library fails at in3-wasm/index.js Line No: 1511 which is `tx.gas = util.toMinHex(args.gas || (api && (toNumber(await api.estimateGas(tx)) + 1000) || 3000000))`.
 Thus the doc should be updated with transaction object to contain `gas` field as compulsory.
+
+7. Added three external functions in NewNodeRegistryLogic contracts `getSignerInfo(address _signer)`, `getIn3NodeInfoByIndex(uint256 _index)` and `getIn3NodeInfoBySigner(uint256 _signer)`.
+  - Why these functions were needed?
+    - Returning an entire structure on Goerli caused `Memory: out of bounds` error, thus, added these functions which returns basic types rather than the entire structure.
+    - This NewNodeRegistryLogic contract has been deployed on `goerli & kovan` and `adminUpdateLogic()` on both have been submitted.
+    - New NodeRegistryLogic contract is deployed on Goerli at `0x4DF6EA1Bb1E92C71C3AEe75AfbFe8191C0c17e65` and on Kovan at `0xdbcBe1b1e89448409fF25f0e4e7Dba9D32fB5FB6`
 
 
 ### TEST CASES THAT ARE FAILING
