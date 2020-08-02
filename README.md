@@ -228,7 +228,7 @@ For APIs 9 & 10, there was no need of explicit endpoints as they are used intern
 
 ***
 
-# For Setting up Clien & Server, and proceeding with testing
+# For Setting up Client & Server, and proceeding with testing
 
 ### Clone the repository
 
