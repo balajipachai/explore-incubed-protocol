@@ -96,7 +96,7 @@ The tests for the contracts are developed using mocha and chai and openzeppelin-
 
 1. In my opinion in NodeRegistryLogic.sol at line no: 477 and line no: 540 are additional require statement which is not needed, I have added comments in the contract too.
 
-2. In NodeRegistryLogic.sol in transferOwnership(address _signer, address _newOwner) is extraneous
+2. In NodeRegistryLogic.sol in transferOwnership(address _signer, address _newOwner) signerRequire statement is extraneous
 
     1. require(in3Node.signer == _signer, "wrong signer");  (signerRequire)
     2. require(si.stage == uint256(Stages.Active), "wrong stage"); (stageRequire)
